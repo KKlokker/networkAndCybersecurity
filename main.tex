@@ -100,7 +100,8 @@
 		When data is send it is done through \textbf{packets} which consist of a data header and including data. A packet is send first to the packet switch often taking form of a router or link-layer-switch. Which then sends it further to the communication link.\\
 		ISP then interconnect the communication links and connects to a higher up ISP or between higher up IPS. The highest tier is tier 1 of which other ISP connect with, even multiple such a \textbf{multi-home} setup is done in case of failure. An ISP may alos connect to a \textbf{PoP} which simply are a group of routers from another ISP.\\
 		ISPS may also peer between eachother to reduce exhange with higher tier ISP and reduce cost. Most often are peering free and third party companies may even create a IXP where multiple ISP can connect and peer to each other.\\
-		Big companies like Google also has their own private network infrastructure, which spans the globe between their datacenters. They are therefore peering between same tier ISPs and are also connected to 1 tier ISP but with reduced exhange.
+		Big companies like Google also has their own private network infrastructure, which spans the globe between their datacenters. They are therefore peering between same tier ISPs and are also connected to 1 tier ISP but with reduced exhange.\\
+		Edge network refers to the connections to all the end host.
 		\subsection{Different types of connections}
 			Home access can be done in different ways:
 			\begin{itemize}
@@ -171,10 +172,166 @@
 			For flooding attacks they may also be a distributed Dos  (DDoS) attack thorugh multiple devices often in a botnet.\\[4mm]
 			A packet sniffer is a type of passive attack of which a device will listen for packages and possibly find sensitive information in packages sent through it.\\
 			IP Spoofing is a package which source address is spoofed, and therefore faked to look as a different source.\\
-			
-				
-		
-			
-			
+	\section{Protocol layers}
+		For an application communicates to network layer, a socket is setup, which indentifies by a port.
+		An app-layer protocol defines
+		\begin{itemize}
+			\item Messages exchanges - requst, resonse,...
+			\item Message syntax - what fields are in a message
+			\item Message sematics - Meaning of fields
+			\item Rules for send and reponds
+		\end{itemize}
+		Transport service requirements - The different requirements an application may set for the transport of data\\
+		The different types of requirements an application may set
+		\begin{itemize}
+			\item Data loss - May be strictly no loss or just some percentage
+			\item Throughput - May need a constant throughput or can be elastic 
+			\item Time sensitive - May need a minimum latency for data
+			\item Security - Some data may be more sensitive than other
+		\end{itemize}
+		\subsection{Client server architecture}
+			The server side is on a always on host, with permanent ip, which handles backend stuff. \\
+			Ex. are hosting api and database.\\
+			The client in this architecture communicates via HTTP protocols are some alike.\\
+			The clients are the dynamic part, may not be on same ip, or connect with each other\\
+		\subsection{P2P}
+			No host involved but clients communicating directly between each other.\\
+			Are scaled based on number of users.
+		\subsection{TCP Service}
+			Reliable transport with flow control to not overwhelm receiver\\
+			Able to throttle sender in an overloaded network.\\
+			Does not provide: timing, min. througput guarantee or security\\
+			Need a setup between client and server established before use.
+		\subsection{UDP}
+			Unreliable data transfer.\\
+			Does not provide: reliability, flow control, congestion control, timing, throughput guarantee, security\\
+			Smarter for data which can handler larger loss. \\
+			TCP may get stuck on a packet whereas UDP would simply skip the package and go forward for the next package.\\
+		\subsection{Domain name system}
+			DNS binds name/string to an ip address.\\
+			This also includes alias names for mail server or sub domains.\\
+			Usefull for more dynamic ip setup and readability\\
+			Implemented via a distributed database.\\
+			The databases stores resource records (RR) in the format (name,value,type,ttl)\\
+			The DNS is implemented in a tree structure.\\
+			First are the root DNS which contains addresses of top level domain severs like .com, .org, .dk\\
+			They then contain then the DNS servers for domain such as google.com, which itself contains addresses for subdomain.\\
+			So when a request is made first, the cache is checked, then a request to a preinstalled root such as 1.1.1.1 is made.\\
+			This then returns a top level address for a DNS server, which a request is made to. \\
+			This is repeated until an ip matching the request is returned.\\
+			This is the itterative method.\\
+			The recursive query find the ip via the DNS servers which contacts eachother putting the burden on them\\
+			Local DNS servers does not belong to hierarchy but is hosted by an ISP.\\
+			TTL (time-to-live) is a numerical value representing the amount of server hops a packet can make before being outdated.\\	
+			The local DNS handles the requesting and caching for an IP to the hiarachy DNS servers.
+			\subsubsection{Types of resource records}
+				To do a lookup the dig tool can be used
+				\begin{itemize}
+					\item Type=A - name: hostname, value: ip-address
+					\item Type=NS - name: domain, value: nameserver
+					\item Type=CNAME - name: alias, value: hostname
+					\item Type=MX: name: '@', value: mail server
+				\end{itemize}
+			\subsubsection{DNS protocol}
+				Query and reply are in the form Message, header\\
+				The header consist 12 bytes dedicated to
+				\begin{itemize}
+					\item 16 bit identificaiton
+					\item 16 bit flags
+					\begin{itemize}
+						\item Query (0) or reply (1)
+						\item 4 bit opcode: standard query (0), domain name form ip (1), status request of server (2), (3) is reserved for status an not used
+						\item AA: The server is authoritative (1), non authoritative/cache (2)
+						\item TC: the message exceeds 512 bytes and are truncated (1)
+						\item RD: Recursion desired (1)
+						\item RA: Recursion avaliable from server (1)
+						\item Zero: 3 bits of zeros reserved
+						\item rCode: Respnse code, no error (0), format error (1), server failure (2), did not find name (3), request is supported (4), policy denies execution of query (5)
+					\end{itemize}
+					\item 16 bit Number of questions in body
+					\item 16 bit Number of answers RRs and is 0 from client and set by server 
+					\item 16 bit Number of authority RRs and is likewise 0 from client
+					\item 16 bit Number of additional RRs 
+				\end{itemize}
+				The body then cosist of
+				\begin{itemize}
+					\item Questions - query from client
+					\item Answers RRs- Response to query from non authority
+					\item Authority RRs -  Response to query from authority
+					\item Additional information 
+				\end{itemize}
+			\subsubsection{Security}
+				A person could bombard the DNS servers with traffic and deny other trafffic in form of DDoS.\\
+				Not successful to date on root server but TLD (top-level domain) has successed\\
+				NXDOMAIN attack is requesting non existing domains and spending the DNS server ressources to find non valid addresses.\\
+				Random subdomain attack are like NXDOMAIN attack but with subdomains to target the namespace rather than root or TLD.\\
+				Phantom domain attack is setting up DNS servers which does not respond or very slow responses, such in a recursive lookup the TLD will have to wait for response.\\
+				TCP SYN is the attack of which a bunch of TCP request are opened but never used.\\
+				DNS domains lock-up is an extended TCP SYN attack where after a connection is established random packages is sent to the server, and the server will wait for a correct response.\\
+				DNS rebinding attack is used to get past browsers same-origin policy, this is done by first the user lands on a shady website, the website then make a request to itself, but the dns record is updated to point at a new site which the script now can be run upon.\\
+				DNS cache poisoning is where an attacker imposes as a nameserver, and then creates a request for the nameserver and answers before the real nameserver and thereby creating a fake lookup in the cache.
+	\section{Web and HTTP}
+		\subsection{HTTP}
+			A HTTP request is sent by the client, and server sends using HTTP protocol an object in response\\
+			The request is sent at port 80 using a TCP request.\\
+			Non-persistent HTTP sendt a single object and then closes\\
+			Persisten HTTP can send multiple files between client and server\\
+			Repsonse time RTT is the time for a small packet to travel from client to server and back.\\
+			Persistent has longer open connection but every referenced object can be sent at as little as one RTT\\
+			Non-persisten requires 2 RTT atleast pr referenced object, and looses alot of time to OS overhead for each established connection.\\[4mm]
+			The general request consist of: method, url, protocol, headers\\
+			The general response consit of: protocol, status code, status phrase, headers, data\\
+			There is 4 method types for HTTP/1.1
+			\begin{itemize}
+				\item GET - get ressource
+				\item POST - send ressource
+				\item HEAD - meta data to check for updates
+				\item PUT - Uploads file in entity body to url field
+				\item DELETE - delete file in the url field
+			\end{itemize}
+			The most common response status codes
+			\begin{itemize}
+				\item 200 OK
+				\item 301 Moved Permanently - object is moved to new location given in message
+				\item 400 Bad Request - not understood by server
+				\item 404 Not Found - Fil not found on server
+				\item 505 HTTP version not supported 
+				\item 418 I'm a teapot - When a teapot is requested to bre coffee
+			\end{itemize}
+		\subsection{Cookies}
+			Cookies are the solution for http being stateless.\\
+			Cookies allows to store files in the browser of the user.\\
+			This can be used for saved storage like shopping cart or authority like a session cookie.\\
+		\subsection{HTTP/2.0}
+			Problem in 1.0 was request was treated in order, 1.1 made it a little better using pielining which allowed for multiple sequential request.\\
+			2.0 introduced streams, where request are numbered in odds and responses are given in even numbers.\\
+		\subsection{Electronic mail}
+			Electronic mail consist of 3 major components: User agents, Mail servers and Simple mail transfer protocol (SMTP)\\
+			User agents are essentially mail clients which allows for creation and reading of emails.\\
+			Mail servers have a mailbox for incomming messages and a message queue for outgoing mails\\
+			SMTP uses TCP on port 25 to transfer emails.\\
+			The protocol work on command response, where command are in ASCII 7 bit and reponse are status codes.\\
+			The mail message consist of header (To, from, subject), blank line and body (Only ASCII)\\
+			The user agents access the mail server via the IMAP protocol or HTTP\\
+		\subsection{Video streaming and content delivery networks}
+			To reduce the amount of data, coding is used on the data, spatial (groups pixels together) and temporal (only send difference of video frames)\\
+			CBR - constant bit rate\\
+			VBR - variable bit rate\\
+			DASH - Dynamic, Adaptive Streaming over HTTP\\
+			DASH divides video files into chunks, with each having different rates.\\
+			All chunks are managed in the manifest file which provides URL to each chunk.\\
+			The client then handles, when to get chunks, at what encoding rate and which server to request chunks.\\
+			CDN networks work by distributing the content to multiple servers around the globe.\\
+			To find the best server in a CDN preiod tests are made in the network of which speeds are in between each server.\\
+		\subsection{P2P}
+			No need for an always on server\\
+			End systems directly communicate.\\
+			Is more scaleable than a server setup.\\
+			For $n$ clients on a server the sever time will be $D_{Client-Server}>max(NF/u_s,F/d_{min})$, it will therefore scale linearly.\\
+			Whereas in P2P the time will be $D_{P2P}>max(F/u_s,F/d_{min},NF/(U_s+\sum u_i))$\\
+			Where $U_s$ is the central server speed, $u_i$ is user upload speed, $d_i$ user download speed and $F$ is filesize.\\
+			A torrent is a group of peers exchaning files divided into chunks of 256Kb.\\
+			The peers are then managed in a tracker, which also participate in the torrent.\\
+			A torrent client then uses those peers, request which chunks they have and missing chunks are downloaded from fastest connection.\\
 			
 \end{document}

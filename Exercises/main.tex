@@ -95,7 +95,7 @@
 	\clearpage
 	\tableofcontents
 	\clearpage
-	\section{Preparaiton}
+	\section{Lecture 1}
 		\subsection{Generalize a formula for sending P such packets back-to-back over the N link}
 			For a single package the sending time will be:
 			$$d_{end-to-end}=N\frac{L}{R}$$
@@ -160,5 +160,55 @@
 		\subsection{Would it be faster to ship 300 terabytes over night than transfer with 1 Gbps}
 			$$\frac{300,000Gb}{1Gb/s}=300,000s= 83.33 hours$$
 			it would therefore be faster to ship the harddrive
-			
+	\section{Lecture 2}
+		\subsection{Assume you request a webpage consisting of one document and five images. The document size is 1 kbyte, all images have the same size of 50 kbytes, the download rate i 1 Mbps, and the RTT is 100 ms. How long does it take to obtain the whole webpage under the following conditions? }
+			\begin{itemize}
+				\item Nonpersistent HTTP with serial connection - 
+				\begin{align*}
+					= 6 \cdot 2\cdot 100ms + (1kbyte + (5\cdot 50)kbytes)/1Mbps\\
+					=1200ms + (8kb + 2000kb)/1000kbps\\
+					=1200ms + 2008ms\\
+					=3208ms
+				\end{align*}
+				\item Nonpersistent HTTP with two parrallel connections - 
+				\begin{align*}
+					= 6 \cdot 2\cdot 100ms / 2 + (1kbyte + (5\cdot 50)kbytes)/1Mbps\\
+					=600ms + (8kb + 2000kb)/1000kbps\\
+					=600ms + 2008ms\\
+					=2608ms
+				\end{align*}				
+				\item Nonpersistent HTTP with six parrallel connections - 
+				\begin{align*}
+					= 6 \cdot 2\cdot 100ms / 6 + (1kbyte + (5\cdot 50)kbytes)/1Mbps\\
+					=200ms + (8kb + 2000kb)/1000kbps\\
+					=200ms + 2008ms\\
+					=2208ms
+				\end{align*}			
+				\item Persistent HTTP with one connection -  
+				\begin{align*}
+					= 2\cdot 100ms + (1kbyte + (5\cdot 50)kbytes)/1Mbps\\
+					=200ms + (8kb + 2000kb)/1000kbps\\
+					=200ms + 2008ms\\
+					=2208ms
+				\end{align*}	
+			\end{itemize}
+		\subsection{Explain the mechanism used for signaling between the client and server to indicate that a persistent connection is being closed. Can the client, the server, or both signal the close of a connection?}
+			A persistent connection will be interpreted as persistent until the general header field Connection is set to close by either client or server
+		\subsection{What encryption services are provided by HTTP}
+			HTTP does not support any encryption, at best the application itself can implement an encryption itself.
+		\subsection{Can a client open three or more simultaneous connections with a given server}
+			There is no limit to the amount of simultaneous connections but in case of consistent connection a larger amount would not benefit
+		\subsection{Either a server or a client may close a transport connection between them if either one detects the connection has been idle for some time. Is it possible that one side starts closing a connection while the other side is transmitting data via this connection? Explain}
+			This may happend, if the connection is slow and being sent just at the end of the idle timer.\\
+			This scenario should also be counted for, such in case a connection is closed upon sending it should be recoverable.
+		\subsection{We have seen that Internet TCP sockets treat the data being sent as a byte stream but UDP sockets recognize message boundaries. What are one advantage and one disadvantage of byte-oriented API versus having the API explicitly recognize and preserve application-defined message boundaries}
+			The advantage to knowing the message boundery would be less control is needed.\\
+			In the scenario of two commands being TIME and TIME-OF-DAY, in case of TCP when sending TIME-OF-DAY it may be seperated such TIME comes first and a response is sent wrongfully.\\
+			But on the flipside if larger files are transfered, the TCP would simply gather every chunk of the file while UDP would have to gather it and ensure the right order of the cunks.
+		\subsection{SMS, iMessage, and WhatsApp are all smartphone real-time messaging systems. After doing some research on the internet, for each of these systems write one paragraph about how the protocols they use. Then write a paragraph explaining how they differ.}
+			\begin{itemize}
+				\item SMS - Uses a protocol named SMPP, which is based upon TCP. The entity ESME connects to a provider SMSC and begin to send a SMPP with the message, a submit message is then sent to the SMSC, which follows by a success message back to the ESME.
+				\item IMessage - A proprietary protocol which connects to apples servers with a TCL encryption. The protocol is based on XMPP which is a protocol for streaming XML elements over networks.
+				\item WhatsApp - Also based on XMPP protocol and uses the signal protocol the encrypt its messages.
+			\end{itemize} 
 \end{document}
