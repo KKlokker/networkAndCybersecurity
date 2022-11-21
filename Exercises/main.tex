@@ -51,6 +51,8 @@
 \lstset{style=mystyle}
 \usepackage{zref-base}
 
+
+\setcounter{tocdepth}{1}
 \makeatletter
 \newcounter{mylstlisting}
 \newcounter{mylstlines}
@@ -211,4 +213,250 @@
 				\item IMessage - A proprietary protocol which connects to apples servers with a TCL encryption. The protocol is based on XMPP which is a protocol for streaming XML elements over networks.
 				\item WhatsApp - Also based on XMPP protocol and uses the signal protocol the encrypt its messages.
 			\end{itemize} 
+	\section{Lecture 3}
+		\subsection{Show that by knowing the translation of seven letters reduces the number of possible substitution ofr a caesar cipher by approx $10^9$}
+			In a normal cipher in a alphabet of 26 letters their is $26!$ possible combinations.\\
+			By knowing 7 translations reduces the combination to $19!$, so the difference is
+			$$26!-19!\approx 10^7$$
+		\subsection{In a block cipher where $T_i$ reverses the order of the bits and the scrambler does not scramble}
+			\subsubsection{With $n=3$ and the original input be equal 10100000 repeated 8 times, what is the value of the output}
+				The result will be 00000101 in each of the 8 blocks.
+			\subsubsection{Repeat A but suppose that the scrambler inverse the order of the 64 bits}
+				This will result in the same input as output not matter the value of $n$
+		\subsection{How could a torrent file be designed such peers can verify the chunks are legitimate?}
+			The torrent file could include hash of the chunks, the hash can then be checked when downlaoded
+		\subsection{End-point authentication}
+			\subsubsection{Diagram a certificate protocol using a nonce}
+				Alice greets bob $\rightarrow$ bobs sends a nonce $r$ $\rightarrow$ Alice encrypts using private key $K_A^-(r)$ $\rightarrow$ Bobs decrypts using Alices public key $K_A^+(K_A^-(R))$
+			\subsubsection{Describe a woman-in-the-middle attack in the certication from Trudy}
+				Trudy could pretend to be bob, and when alice ask to greet bob Trudy greets bob and uses his nonce to Alice. Trudy then sends Alices encrypted nonce to Bob and can now be certified to be Alice
+		\subsection{Would the phrase "The quick brown fox jumps over the lazy dog" be sufficient to crack a two level polyalphabetic cipher}
+			No cause it would only tell something about the first layer, while the second layer would not be tested.\\
+			An easier attack would start by sending two alphabets to get the first and second cipher. From this the cipher would be easy to reconstruct
+		\subsection{Translate using the following monoalphabetic cipher}
+			\begin{itemize}
+				\item a - m
+				\item b - n
+				\item d - v
+				\item e - c
+				\item f - x
+				\item g - z
+				\item h - a
+				\item i - s
+				\item j - d
+				\item k - f
+				\item l - g
+				\item m - h
+				\item n - j
+				\item o - k
+				\item p - l
+				\item q - p
+				\item r - o
+				\item s - i
+				\item t - u
+				\item u - y
+				\item v - t
+				\item w - r
+				\item x - e
+				\item y - w
+				\item z - q
+			\end{itemize}
+			Decode: "fsgg ash" $\rightarrow$ "kill him"\\
+			Encode "This is a secret message" $\rightarrow$ "Uasi si m icbocu hciimzc"
+	\section{Lecture 4}
+		\subsection{Checksums: UDP and TCP use 1s complement for their checksums.}
+			\subsubsection{Convert the following bytes to 1s complement}
+				To convert the bytes is inverted
+				\begin{itemize}
+					\item 01010011 - 10101100
+					\item 01100110 - 10011001
+					\item 01110100 - 10001011
+				\end{itemize}
+			\subsubsection{Why does UDP use the 1s complement for sum checking}
+				By using 1s complement by the sender this will then negate the binary.\\
+				When the receiver then adds each 16 bit to the checksum not matter if the receiver uses big or little endian the result will be 0 if the problem occoured.
+		\subsection{How reliable is UDP checksum}
+			The larger the packets the less reliable udp will be.\\
+			Since checksum uses only 16 bits it is likely to happend, but it relies on the more robust network layers protocols.
+		\subsection{What is the windows size of a TCP connection such no packet is dropped?}
+			\begin{align*}
+				RTT=0.03s\\
+				packetSize=1500\cdot 8=12000bit\\
+				R=1GBps=10^9Bps
+				\frac{windowsSize\cdot packetSize}{RTT}=R\\
+				\frac{windowSize\cdot 12000bit}{0.03s}=10^9\frac{bit}{s}\\
+				windowSize = 2500
+			\end{align*}
+			Therefore the maximum amount of packages which can be sent is 2500 before packages would be dropped.
+		\subsection{Illustrate a GBD between two host sending 6 packages where the first acknowledgment and the last data segment is lost}
+			\begin{figure}[h!]
+				\includegraphics[width=300px]{assets/GBN.png}
+				\caption{Illustration of GBN}
+			\end{figure}
+		\subsection{When will buffering improve performance for GBN}
+			In the case of a large windows size, and the first package is lost but the rest is received, when the first package is then resent and aknowledgment equal to window size.
+	\section{Lecture 5}
+		\subsection{Flow control: A large file is being trasnfered from A (120Mbps) to B (50Mbps) via a link (100Mbps), describe the flow controle}
+			The flow controle will establish a windows for the TCP packages, such the receiver B will not overflow the reading buffer.
+		\subsection{Duplicate acks: Why wait for three duplicate acks and not just at the first dublicate}
+			Three is choosen since a double could accour in the event of out of order, but three will most likely be a missing segment.
+		\subsection{Flow+Conguestion control: In the scenario where the receiver buffer is large enough for a full file and the A can send with 10 times link speed what is the limiting factor}
+			The limit will be by the link and the congeustion controle. When A tries to send more than the link speed there will be dropped packages and therefore limit the amount of data sent.\\
+			According to the choosen conguestion controle mechanism, it will be zig-zag around the limit of sending speed.
+		\subsection{Comparing GBN, SR, TCP: In the scenario with 5 data segments send at once from A to B and 2nd segment is lost}
+			\subsubsection{How many segments, acks have benn sent and what are their sequence numbers}
+				\begin{itemize}
+					\item GBN 9 segm \& 8 ack - seg1, seg2, seg3, seg4, seg5, ack2, nack3, nack4, nack5, seg2, seg3, seg4, seg5, ack3, ack4, ack5, ack6
+					\item SR 6 segm \& 6 ack - seg1, seg2, seg3, seg4, seg5, ack2, ack2, ack2, ack2, seg2, ack6
+					\item TCP: both option for GBN and SR are possible dependent on the implementation
+				\end{itemize}
+			\subsubsection{If the timeout value is larger than 5RTT which method is fastest}
+				\begin{enumerate}
+					\item TCP - using fast retransmit and receiver buffer
+					\item GBN
+					\item SR - since it has to wait 5RTT where GBN will know before that somethign went wrong
+				\end{enumerate}
+		\subsection{Large files and seequence numbers: Consider the transfer of file size $L$ bytes and an MSS of 536 bytes}
+			\subsubsection{What is the maximum size of $L$ such the sequnce number is not exhausted}
+				When sending the segment number will be for the next expected byte. Therefore the maximum number can be divided by the MSS.\\
+				The maximum segment number is $2^{32}$.\\
+				Therefore the maximum size of the file is $2^{32}/536=8.01\cdot 10^6$
+			\subsubsection{How long would it take to send, with an extra 66 bytes of data over a 155 Mbps link. Assume no flow control and congestion control}
+				$\frac{(536+66)\text{byte}\cdot 8.01\cdot 10^6}{155\text{Mbps}}=248.97\text{s}$
+		\subsection{End-point auth}
+			\subsubsection{Are an UDP request able to spoof en ip in the header and receive the answer}
+				The answer will be sent to the spoofed ip address by. This therefore make UDP somewhat vulnerable since it can be used for DoS attacks agains the spoofed ip or if the UDP results in a change on the server which is only permitted by some ip's
+			\subsubsection{After a server receive a synACK with correct sequence number can it be sure that the TCP request is not spoofed in case of a non man-in-the-middle attack}
+				This would only happend if the attacker could predict the sequence number and therefore be able to sent first an initiater, predict the sequence number and send it back in synACK.\\
+				This is therefore very unlikely if not impossible in correct implementations.
+	\section{Lecture 6}
+		\subsection{Diffie-Hellman}
+			\subsubsection{Prove that in general Alice and Bob obtain the same symmetric key that is prive $S=S'$}
+				\begin{align*}
+					T_A=g^{S_A}\mod p\\
+					T_B=g^{S_B}\mod p\\
+					S=T_B^{S_A}\mod p\\
+					S'=T_A^{S_B}\mod p\\
+					S=(g^{S_A}\mod p)^{S_B}\mod p\\
+					S=g^{S_AS_B}\mod p\\
+					S'=(g^{S_A}\mod p)^{S_B}\mod p\\
+					S'=g^{S_BS_A}\mod p\\
+					S'=S
+				\end{align*}
+			\subsubsection{With $p=11$ and $g=2$ suppose Alice and Bob choose private keys $S_A=5$ and $S_B=12$ respectively. Calculate Alice's and Bob's public keys $T_A$ nad $T_B$}
+				\begin{align*}
+					T_A=g^{S_A}\mod p\\
+					T_A=2^5\mod 11
+					T_A=10
+					T_B=g^{S_B}\mod p\\
+					T_B=2^{12}\mod 11\\
+					T_B=4
+				\end{align*}
+			\subsubsection{Following up on part b now calculate $S$ as the shared symmetric key}
+				\begin{align*}
+					S=g^{S_AS_B}\mod p\\
+					S=2^60\mod 11\\
+					S=1
+				\end{align*}
+			\subsubsection{Provide a timeing diagram that show how Diffie-Hellman can be attacked by a man-in-the-middle. The timing diagram should have three vertical lines, one for Alice, one for Bob, and one for the attacker Trudy, Discuss also how this can be avoided.}
+				\includegraphics[width=300px]{assets/DiffieHellman.png}
+		\subsection{Wireshark and SSL}
+			\subsubsection{Is Wireshark packet 112 sent by the client or server}
+				Client
+			\subsubsection{What is the servers IP address and port number}
+				216.75.194.220\\
+				2271
+			\subsubsection{Assuming no loss and no retransmissions what will be the sequence number of the next TCP segment sent by the client}
+				Current 79\\
+				Len: 204\\
+				next 283
+			\subsubsection{How many SSL record does wireshark packet 112 contain}
+				3
+			\subsubsection{Assumng that the handshake type field is 1 byte and each length field is 3 bytes, what are the values of the first and last bytes of the Master Secret (or Encrypted Master Secret)}
+				Start with 00 and end with 29
+		\subsection{Will SSL at the receiving side accept the bogus packet and pass the payload tothe receiving application? Why or why not}
+			No since the sequence is part of the hash, will the hash not match and the packet will be thrown away.
+	\setcounter{section}{7}
+	\section{Lecture 8}
+		\subsection{Consider the network below}
+			\includegraphics[width=300px]{assets/7.1.png}
+			\subsubsection{Show the forwarding table in router A, such that all traffix destined to host 3 us forwarded using interface 3}
+				H3 IP prefix - 3\\
+			\subsubsection{Write a forwarding table such that all traffic from H1 destined to host H3 is forwarded through interface 3, while all traffic from H2 destined to host H3 is forwarded through interface 4}
+				This is not possible with a forwarding table since it would be router A which should forward the two different package but since the senders ip is not included in the table can the packages not be distringuished.
+		\subsection{Longest prefix matching and number of addresses}
+			Consider a datagram network using 8-bit host addresses. Suppose a router uses longest prefix matching and has the following forwarding table\\
+			11 - 0\\
+			101 - 1\\
+			100 - 2\\
+			otherwise - 3\\
+			For each of the four interfaces, give the associated range of destination host addresses and the number of addresses in the range\\
+			Since the prefix for 0 is 11 the range will be $2^{8-2}=2^6$\\
+			For the other is will be $2^{8-3}=2^5$
+		\subsection{CIDR notation}
+			Consider a router that interconnects three subnets: Subnet 1, Subnet 2, and Subnet 3. Suppose all of the interfaces in each of these three subnets are required to have the prefix 223.1.17/24. Also suppose that Subnet 1 is required to support at least 62 interfaces, Subnet 2 is to support at least 106 interfaces, and Subnet 3 is to support at least 15 interfaces. Provide three network addresses (of the form a.b.c.d/x) that satisfy these constraints.\\
+			62 $< 2^6$\\
+			106 $< 2^7$\\
+			15 $< 2^4$\\
+			subnet 1 - 223.1.17.4/6\\
+			subnet 2 - 223.1.17.1/7\\
+			subnet 3 - 223.1.17.20/4
+		\subsection{Nat translation table}
+			\includegraphics[width=300px]{assets/7.4.png}\\
+			Suppose that the ISP instead assigns the router the address 24.34.112.235 and that the network address of the home network is 192.168.1/24. .. Assign addresses to all interfaces in the home network. .. Suppose each host has two ongoing TCP connections, all to port 80 at host 128.119.40.86. Provide the six corresponding entries in the NAT translation table.\\
+			192.168.1.1\\
+			192.168.1.2\\
+			192.168.1.3\\
+			Table entries\\
+			128.119.40.86, 80 | 192.168.1.1 , 1234\\
+			128.119.40.86, 80 | 192.168.1.2, 1234\\
+			128.119.40.86, 80 | 192.168.1.3, 1234
+		\subsection{MTU and fragmentation}
+			Consider sending a 1600-byte datagram into a link that has an MTU of 500 bytes. Suppose the original datagram is stamped with the identification number 291. How many fragments are generated? What are the values in the various fields in the IP datagram(s) generated related to fragmentation?\\
+			This will be in 4 fragments, since even accounting for header sizes of 20 bytes.
+		\subsection{Nat and P2P}
+			What is the problem of NAT in P2P applications? How can it be avoided? Is there a special name for this solution\\
+			The problem is ingoing connection having to find the open address. The is done with a NAT tool which searches the local network for open connections
+		\subsection{Switch fabric}
+			Suppose two packets arrive to two different input ports of a router at exactly the same time. Also suppose there are no other packets anywhere in the router
+			\subsubsection{Suppose the two packets are to be forwarded to two different output ports. Is it possible to forward the two packets through the switch fabric at the same time when the fabric uses a shared bus?}
+				No the bus will only be able to handle one package at the time
+			\subsubsection{What about switching via memory}
+				In case of a multi core processor this would be possible
+			\subsubsection{What about crossbar}
+				In a crossbar they will be able to pass through to output at the same time.
+	\section{Lecture 9}
+		\subsection{BGP and AS-Path}
+			Will a BGP router always choose the loop-free route with the shortest ASpath length? Justify your answer.\\
+			A loop-free route will always be choosen in case of non negative weights. In this case it would never be desireable to make a loop.\\
+			A negative weight could happen in case of admin choosen weight.
+		\subsection{Routing protocols}
+			Consider the network.\\
+			\includegraphics[width=300px]{assets/9.2.png}\\
+			Suppose AS3 and AS2 are running OSPF for their intra-AS routing protocol.\\
+			Suppose AS1 and AS4 are running RIP for their intra-AS routing protocol.\\
+			Suppose eBGP and iBGP are used for the inter-AS routing protocol.\\
+			Initially suppose there is no physical link between AS2 and AS4
+			\subsubsection{Router 3c learns about prefix x from which routing protocol: OSPF, RIP, eBGP, or iBGP}
+				It will learn it from eBGP
+			\subsubsection{Router 3a learns about x from which routing protocol}
+				iBGP
+			\subsubsection{Router 1c learns about x from which routing protocol}
+				eBGP
+		\subsection{BGP and routing traffic}
+			Suppose ASs X and Z are not directly connected but instead are connected by AS Y. Further suppose that X has a peering agreement with Y, and that Y has a peering agreement with Z. Finally, suppose that Z wants to transit all of Y’s traffic but does not want to transit X’s traffic. Does BGP allow Z to implement this policy?\\
+			Yes if using the route selection aglorithm.
+		\subsection{Poisoned reverse and count-to-infinity problem}
+			Can the poisoned reverse solve the general count-to-infinity problem?
+			No in the system\\
+			A - C - D\\
+			\;\textbackslash\;\; / \\
+			. B\\
+			And the shortest path from B to D is B A C D\\
+			C D then breaks, this will poison C to A but when C then searched for new D it will find it via B and then create a couting loop.
+		\subsection{BGP and ISP peering}
+			Consider the following network\\
+			\includegraphics[width=300px]{assets/9.5.png}\\
+			By using local\_pref the bgp can force isp B to handover data on given gateways on the east coast.
+			
 \end{document}

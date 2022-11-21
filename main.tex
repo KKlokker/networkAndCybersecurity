@@ -143,8 +143,8 @@
 			\begin{itemize}
 				\item Nodal processing delay - delays in the router such as determine package header or bit error correction ($\mu$s)
 				\item Queuing delay - delays in case of heavy traffic and non empty buffers ($\mu$s - ms)
-				\item Transmission delay - delays that occur when waiting for a whole package and transmission rate is low  ($\mu$s - ms)
-				\item Propagation delay - delays from the actual bit transportation limit by medium (ms)
+				\item Transmission delay - delays that occur when waiting for a whole package and transmission rate is low  ($\mu$s - ms) - $d_{trans}=\frac{L}{R}$
+				\item Propagation delay - delays from the actual bit transportation limit by medium (ms) - $d_{prop}=\frac{m}{s}$
 			\end{itemize}
 			These in total are the total nodal dealy.\\
 			
@@ -207,6 +207,10 @@
 			Does not provide: reliability, flow control, congestion control, timing, throughput guarantee, security\\
 			Smarter for data which can handler larger loss. \\
 			TCP may get stuck on a packet whereas UDP would simply skip the package and go forward for the next package.\\
+			UDP is also faster and connectionless therefore making it possible to handle more connections faster.\\
+			The header includes 4 16 bits data: sorce port, destination port, length of data, checksum\\
+			The checksum works by the data is split up into 16 bit words, then they are summed and overflow is wrapped around. Then the sum is converted to 1s compliment (everything is flipped). This will then be the checksum.\\
+			If the checksum fails the data is either discarded or delivered with an error.
 		\subsection{Domain name system}
 			DNS binds name/string to an ip address.\\
 			This also includes alias names for mail server or sub domains.\\
@@ -333,5 +337,718 @@
 			A torrent is a group of peers exchaning files divided into chunks of 256Kb.\\
 			The peers are then managed in a tracker, which also participate in the torrent.\\
 			A torrent client then uses those peers, request which chunks they have and missing chunks are downloaded from fastest connection.\\
+	\section{Network security}
+		The properties of secure communication
+		\begin{itemize}
+			\item Confidentiaity - Only sender and reciever should be able to read the message using encryption
+			\item Message integrity - The message should not be altered by intent or accident which is checked using check sum
+			\item End-point authentication - Insuring sender and reciever are able to confirm their idenitity
+			\item Operational security - A firewall or depp packet inspection may be setup between local network and public network to counter malicious attacks
+		\end{itemize}
+		\subsection{Principles of crypthography}
+			A text is first plain text and after using the encryption algorithm it becomes a ciphertext.\\
+			The most used method used today are based on keys between sender an receiver.\\
+			The a symmetric key system both sender and receiver has to same key to decrypt an encrypt.\\
+			In a public key system sender and receiver has 2 keys a public $K^+$ and private $K^-$. The sender then encrypts using the public receiver key which then can be decrypted by the receiver using the private key.\\
+		\subsection{RSA}
+			RSA is an algorithm to implement public key system.\\
+			To generate a public and private key the following is done
+			\begin{itemize}
+				\item Two large primes are choosen to larger to higher encryption though longer de,- and encryption times, but the product should be in the order of 1024 bits
+				\item Computer $n=pq$ and $z=(-1)(q-1)$
+				\item A number $e$ is choosen which is $e<n$ and $gcd(e,n)=1$
+				\item Find a number $d$ such $ed-1 \mod z=1$ 
+				\item $K^+=(n,e)$ and $K^-=(n,d)$
+			\end{itemize}
+			The encryption $c$ is then done by
+			$$c=m^e\mod n$$ where $m<n$\\
+			The decryption is then done by
+			$$m=c^d\mod n$$
+			This does take a lot of data and time therefore often sessions keys are generated and shared using RSA.\\
+			This works by when a message is encrypted and decrypted it is expressed as
+			\begin{align}
+				m&=(m^e\mod n)^d\mod n\\
+				&=m^{ed}\mod n\\
+				&=m^{ed\mod z}\mod n\\
+				&=m^1\mod n\\
+				&=m
+			\end{align}
+			(2) can be done as proberty of modulo. (3) is possible because be definition $p$ and $q$ are prime and $n=pq$ and $z=(p-1)(q-1)$ makes it such $x^y$ mod $n=x^{y\;\text{mod}\;x}$.\\
+			(4) can be done due to $z$ was choosen by definition to be $ed\mod z = 1$. (5) is done since $m<n$.\\
+			Since $e$ and $d$ are multiplied we would get the same result if the message is encrypted or decrypted first.\\[4mm]
+			The safety of RSA relies on there is no known fast factoring of number alogirthm
 			
+		\subsection{Symmetric key encryptions}
+			\begin{itemize}
+				\item Caesar cipher - Every letter is shifted a number in the alphabet with wrap araound
+				\item Monalphbetic cipher - Every letter is mapped to another letter
+				\item Polyalphabetic - Using multiple monoalphabetic ciphers in a certain order
+				\item Block cipher (ECB) -  The message is split up into blocks of size $k$ which then is mapped to an encrypted block in same size
+				\item Advanced block cipher (OFB) - Split message up to smaller block of size $k_1$ and then again to size $k_2$, the $k_2$ is then scrambled in place. This is repeated $n$ times
+				\item Cipher block chaining (CFB) - First a Initization vector is genereated and send, then every block is XOR'ed with the last send message and encrypted using shared key.
+			\end{itemize}
+			To attack a simple encryption there are different methods
+			\begin{itemize}
+				\item Ciphertext-only attack - Can be attacked using statistical analysis
+				\item Known-plaintext attack - If some of the plaintext is known and therefore can be matched to the encryption
+				\item Chosen-plaintext attack - If the attacker has access to the plaintext and can therefore get information about the encryption
+			\end{itemize}
+			\subsubsection{Feistel cipher}
+				\begin{figure}[h!]
+					\includegraphics[width=300px]{assets/feistelCipher.png}
+					\centering
+					\caption{Feistel cipher illustration by \href{https://crypto.stackexchange.com/questions/67717/learning-about-feistel-cipher}{terodee}}
+				\end{figure}
+				The cipher works by
+				\begin{enumerate}
+					\item Plaintext is splitted into 2 chunks left and right
+					\item A function is then performed on the right using key 1
+					\item The left chunk is then XOR'ed with the output of the function
+					\item The XOR output is now the right chunk and the original right chunk is the left chunk
+					\item 2 - 3 is repeated $n$ times with the last chunk as input and the key is itterated
+					\item Left and right are switched
+				\end{enumerate}
+				To then decrypt the same algorithm is used with the reverse order of the keys.\\
+				This will work due to XOR being reversible
+			\subsubsection{DES}
+				A symmetric encryption system, such input and output are the same size\\
+				First the plaintext is divided into 64 bit chunks.\\
+				A 64 bit key is generated.\\
+				Then an inital permutation is done on the 64 bit text using a predetermined vector of value mappings.\\
+				A feistel cipher is then done with 16 rounds, where the function is defined as:\\
+				\begin{enumerate}
+					\item The 32 bit input is expanded to 48 bit 
+					\item The 48 bit is XOR'ed using the input key 
+					\item The 48 bit is then substituted using the S-Box table to 32 bits. This is done by splitting the 48 bits into 6 bits chunks. Then bit 1 and 6 is the row number and 2,3,4 and 5 is the column number.
+					\item The 32 bits are then permutated using the P-table.
+				\end{enumerate}
+				After the feistel cipher, a final permutation is done by with the inverse of the first permutation.\\[4mm]
+				To find the subkeys for each of the 16 rounds the following is done to the key.\\
+				First the key is reduced to 56 using permuted choice 1 table, where two chunks of 28 is created is also divided.\\
+				Each chunk is then circular left shifted once on itteration 1,2,9 and 16 and shifted twice on every other itteration.\\
+				Then the second permutation table is used to generate the 48 bit sub key.\\
+				By this method a bit will be used in 14 out of the 16 keys.
+				\begin{figure}[h!]
+					\includegraphics[width=300px]{assets/desExpansion.png}
+					\centering
+					\caption{Des expansion visulization}
+				\end{figure}
+				\begin{figure}[h!]
+					\includegraphics[width=300px]{assets/desSBoxTable.png}
+					\hspace{10px}
+					\includegraphics[width=60px]{assets/desPBoxTable.png}
+					\centering
+					\caption{Des S-Box lookup table to the left and P-box table to the right}
+				\end{figure}
+				\begin{figure}[h!]
+					\includegraphics[width=150px]{assets/desPC1.png}
+					\hspace{50px}
+					\includegraphics[width=140px]{assets/desPC2.png}
+					\centering
+					\caption{Des permutation choice tables for creating sub keys}
+				\end{figure}
+			\subsubsection{Triple DES}
+				To get a longer key 3 DES algorithms can be chained.\\
+				The encrypt it is done by the three keys $k1,k2,k3$ such ciphertext$=E_{k3}(D_{k2}(E_{k1}(\text{plaintext})))$\\
+				For the decryption the encrypt and decrypt is reversed.\\
+				The chaining of encrypt decrypt encrypt, is such if a program only implements DES then the triple DES will still work.\\
+				Triple is required over double due to double being vulnarable to a meet in the middle attack.\\
+				If an attacker has access to the input and output of encryption and decryption and knowns a pair lets say A$\rightarrow$B\\
+				Then a DES bruteforce is done with A as input and all outputs are saved. Then B is bruteforce decrypted and all output are saved.\\
+				Then a matching pair can be found. This therefore result in two bruteforce has to be done on DES therefore only making the combinations $2^{57}$ and not $2^{112}$
+			\subsubsection{AES}
+				Plain text is split up into chunks of 128 bits.\\
+				There is 3 levels of encryption where 
+				\begin{enumerate}
+					\item key: 128 bits, rounds: 10
+					\item key: 192 bits, rounds: 12
+					\item key: 256 bits, round 14
+				\end{enumerate}
+				The aglorithm works by representing the input as a 4x4 matrix of bytes where the matrix is filled in by columns such b2 is in row 1 column 0, in the following steps
+				\begin{enumerate}
+					\item Plaintext is XOR'ed with key 0
+					\item Sub-bytes - A S-box lookup table is used for substituting bytes
+					\item Shift rows - Each row is cyclic left shifted (in bytes) x times where x is equal to the row number 
+					\item A mix column matrix is multipled to each column of the matrix
+					\item The round key is XOR'ed to the matrix
+				\end{enumerate}
+				Step 2-5 is repeated, until last round where step 4 is not performed.\\
+				To decrypt the keys order is reversed.\\[4mm]
+				To find the round keys first a key is generated equal to 128/192/256 bits.\\
+				For the 128 bits key
+				These are then divided into 4 words of 32 bits denoted $w_i$\\
+				Therefore making $k_0=[w_0,w_1,w_2,w_3]$\\
+				We can here denote $k_{0-1}=w_1$\\
+				To find round $i$'s key the following is done
+				\begin{itemize}
+					\item $k_{(i-1) - 3}$ is left cyclic shifted
+					\item Then it is substituted using the same S-box for the algorithm
+					\item Then the round constant is XOR'ed
+					\item This is then XOR'ed with $k_{(i-1)-0}$ and is equal to $k_{i-0}$
+					\item To find $k_{i-1}$ $k_{(i-1)-1}$ XOR'ed with $k_{(i)-0}$ 
+					\item To find $k_{i-2}$ $k_{(i-1)-2}$ XOR'ed with $k_{(i)-1}$ 
+					\item To find $k_{i-3}$ $k_{(i-1)-3}$ XOR'ed with $k_{(i)-2}$ 
+				\end{itemize}
+				The round constants are as follows
+		\subsection{Cryptographic hash functions}
+			To ensure the integredity of a message a checksum is used.\\
+			The is done by the message being sent into a hash function which generates a unique value for the message.\\
+			To ensure authenticity of a message, not only is the messaged hashed but a shared key is added to the message. Called message authentication code (MAC)\\
+			Then when the message is received the message is also hashed and checked to be equal to the sent hash value.\\
+			This shared key could then be shared using RSA.\\[4mm]
+			To get a digital signature the private key can be used to encrypt a document which then people can verify by decrypting using the public key.\\
+			This can then be combined with the MAC, such a method can both have integrity and verified arthour. After generating the hash the senders private key is used to encrypt the hash, which then can be decrypted and verified.\\
+			A certification authory (CA) is used to hold public keys and verify to whom a public key belong to.\\
+			An authentication protocol can work by first teh sender sends an initiating message, the receiver response with a nonce (never used number), the sender encrypts using private key and receiver decrypts using public key. If they match an uthentication is established.\\
+		
+		\subsection{Diffie Hellman key exhange}
+			Allows two parties that have no prior knowledge of each other tojointly establish a shared secret key over an insecure channel.\\
+			The exhange is based on:
+			\begin{enumerate}
+				\item A common ground such as a number
+				\item Client and server adds their own number to the common ground
+				\item Client and server switch keys
+				\item Client and server again adds their own number
+				\item Client and server now has the same number
+			\end{enumerate}
+	\section{Transport layer}
+		The transport layer is the messenger between the network layer and applicaiton layer.\\
+		Therefore the transport layer is only at presense in the end systems of the network.\\
+		The transport layer provides protocols for UDP (User datagram protocol) and TCP (Transmission control protocol)\\
+		Transport layer packet is called a segment.\\
+		The IP is an unreliable service which does not guarantee segment delivery, in order and integreity\\
+		This is therefore encounted for in the transport layer.\\
+		\subsection{Multiplexing and demultiplexing}
+			Demultiplexing is when a segment redirects a data to the correct socket.\\
+			Multiplexing is creating segments with header information for the demultiplexing.\\
+			The segment header therefor has two fields of 16 bits the source port and detination port.\\
+			The well-known port numbers are from 0 - 1023 and are restricted, for things like HTTP and FTP\\
+			In case of a server setup with TCP, the server then uses the four parameters in the TCP request (src ip, dest ip, src port, dest port) to setup a demultiplexing on a new port.\\
+			Such two client may connect to the same port and unknowingly be switched to a new port without having to change TCP parameters.
+		\subsection{Reliable data transfer}
+			To verify (positive aknowledgments) or request repear (negative acknowledgment) data transmission is known as ARQ (Automatic Repaeat reQuest) protocols\\
+			An ARQ protocol requires error detection, receiver feedback and retransmission\\
+			This type of protocol will only send new data when the receiver aknowledge the package was received, therefore the name stop-and-wait protocols.\\
+			The problem is if the aknowledgment is corrupted, to counteract this the package is sent with a sequence number and in case of unidentifiable aknowledgment the packet can be sent again.\\
+			Likewise the acknowledgment also gets the sequence number to counter act dublicate acknowledgments.\\
+			The sequence is simply a single bit, to know that the packet is in the right order relative to the last packet.\\
+			In case of a lost package or aknowledgment the sender has a time of which after it will resend the package\\
+			Choosing the time is hard and must be estimated to be fast enough to not wait too long but still not send too many dublicate packages.\\
+			Pipelining is the act of sending multiple packages at once, and increasing the sequence numbering.
+			\subsubsection{Go-Back-N}
+				GBN is a protol which allows the sender to send $n$ packages at once.\\
+				To protocol states that the base is the sequence number which is next to be aknowledged\\
+				The nextseqnum is the next package to be sequenced and sent.\\
+				The protocol can also be called sliding-window protocol because it can be seen as a windows swhich slides over the packages to send.\\
+				GBN only use a single timer for all package refering to the last not aknowledged package. If the time runs out all non aknowledged packages are resend.\\
+				If the receiver get an out of order package the package is discarded and a negative aknowledgment is sent, where the sender will resend all non aknowledged packages.\\
+				Selective repeat combats this by only sending negative aknowledged or timeout packages from which the receiver must keep a buffer of correct and always aknowledge good packages.\\
+		\subsection{TCP}
+			TCP is duplex thus allowing data in both directions at once.\\
+			TCP is a hybrud if selective repeat and Go-Back-N\\
+			TCP is point-to-point at therefore only two host can be part of a TCP connection\\
+			First a three way handshake is made with no payloads.\\
+			Then a send buffer is initialized and the application fills it up.\\
+			Then the TCP chooses when the create a segment with buffer data.\\
+			The maximum segment size (MSS) is determiend maximym transmission unit (MTU) (1500 bytes in ethernet and PPP) minus header data from IP and TCP (typically 40 bytes) \\
+			The segment header includes the same as UDPs (src, destination port number, checksum)
+			\begin{itemize}
+				\item 32 bit sequence field
+				\item 32 bit sequence aknowledgment field
+				\item Receive window indicating number of bytes receiver is willing to accept
+				\item 4 bit header length field representing number of 32 bit header lengths
+				\item Optional field include timestamp, agreed MMS, windows scaling factor 
+				\item 6 bit flag field: 
+				\begin{itemize}
+					\item ACK bit for aknowledgement 
+					\item RST, SYN, and FIN for connection setup and teardown
+					\item CWR and ECE for congestion notification
+					\item PSH pass data to upperlayer immediately
+					\item URG for urgent segments
+				\end{itemize}
+			\end{itemize} 
+			\subsubsection{Sequence numbering}
+				The TCP sequence numbering is on every byte and the segments numbering is the first bytes number.\\
+				Aknowledge numbering works by the response is the next expected aknowledge number. \\
+				Say the host recieves a packet segment 0, length 447 bytes, then the host responds with aknowledge number 448\\
+				TCP is therefore said to provide commulative acknowledments.\\
+				In case of out of order packages the individual implementation decide to either buffer it or discard it.
+			\subsubsection{Timeout time}
+				To find segment timeout the first the round trip time (RTT) is calculated using the formula
+				$$\text{EstimatedRTT}=(1-\alpha)\cdot \text{EstimatedRTT}+\alpha \cdot \text{SampleRTT}$$
+				Where $\alpha=1/8$ and it can be noted that the new sample is more weighted.\\
+				The variation is also important and is calculated using
+				$$\text{DevRTT}=(1-\beta)\cdot \text{DevRTT}+\beta \cdot |\text{SampleRTT}-\text{EstimatedRTT}|$$
+				Where the recommeded value is $\beta = 0.25$\\
+				The timeout is then determined as
+				$$\text{TimeoutInterval}=\text{EstimatedRTT}+4\cdot\text{DevRTT}$$
+				For the first package it is set to 1 second and when a timeout occurs the value is doubled.
+				When measuring only orginal packages are measured such a false time is not measured from a newly sent and old aknowledgment\\[4mm]
+				Fast retransmit can occur if a triple duplicate aknowledge is gotten. Three is choosen since a double could accour in the event of out of order, but three will most likely be a missing segment.\\
+				Then the timer is ignored and the second is sent as soon as possible.
+			\subsubsection{Flow control}
+				Flow control is used in case the application is reading data slower than TCP is receiving the therefore overflowing the receiver buffer.\\
+				The receiver buffer spare room called receive window will always be equal to 
+				$$\text{rwnd}=\text{RcvBuffer}-\text{LastByteRcvd}-\text{LastByteRead}$$
+				Where LastByteRead is the byte numbering read by the application.\\
+				Therefore the sender will not send more bytes than LastSendByte-LastAckedByte\\
+				When the rwnd is 0 the sender have to send bytes until acknowledgment and a non zero rwnd is sent by the receiver
+			\subsubsection{Connection management}
+				A TCP connection is established by
+				\begin{enumerate}
+					\item A segment without application data is sent with SYN flag set to 1 and a random segment number
+					\item The server allocates space for variables and buffer and send a segment with SYN = 1, ACK = segment number +1 and a segment number the server itself chooses randomly
+					\item The client allocates space for variables and buffer and sendst the first data with ACK = server segment number +1 and SYN = 0
+				\end{enumerate}
+				When a TCP connection is shutdown the following is done
+				\begin{enumerate}
+					\item Client send a segment with FIN flag = 1
+					\item Server acknowledges the FIN flag
+					\item Server sendt a segment with FIN flag = 1
+					\item Client achknowledges the FIN flag 
+				\end{enumerate}
+				When the last step is done 30 seconds is waited before closing fully down.\\
+				When TCP acknowledges a FIN segment the variables and buffer space deallocated.\\
+				The TCP from client has 6 stages
+				\begin{itemize}	
+					\item SYN\_SENT - Send SYN
+					\item ESTABLISHED - Receive SYN \& ACK, send ACK
+					\item FIN\_WAIT\_1 - Send Fin
+					\item FIN\_WAIT\_2 - Receiver ACK
+					\item TIME\_WAIT - Receive FIN, send ACK
+					\item CLOSED - Wait 30 seconds
+				\end{itemize}
+				The TCP for server has 6 stages
+				\begin{itemize}
+					\item Listen - new open socket
+					\item SYN\_RCVD - Receive SYN, send SYN \& ACK
+					\item ESTABLISHED - Receive ACK
+					\item CLOSE\_WAIT - Receive FIN, send ACK
+					\item LAST\_ACK - Send FIN
+					\item CLOSED - Receive ACK
+				\end{itemize}
+				
+				In the case of the server receiving a TCP request on a non TCP port a segment with RST flag is sent back.\\
+				For a server to prevent SYN flooding, a hash of the client is made from IP, sorce and port number called cookie and is sent as segment numbering and forgotten.\\
+				When receiving the SYNACK the cookie is recalculated and only if the ack is cookie +1 will the server allocate space and recognize it as a legitimate request.\\
+			\subsubsection{Congestion Control}
+				Classic TCP uses end-to-end congestion control rather than network assisted (Where router indicates to host if congestion is a problem).\\
+				To exercise congestion control the sending rate is limited to
+				$$\text{LastByteSent} - \text{LastByteAcked} \leq min(\text{cwnd},\text{rwnd})$$
+				Where cwnd is congestion window.\\
+				cwnd is determined by
+				\begin{itemize}
+					\item If a timeout occours or a retransmission the cwnd is lowered
+					\item A successfull delivery will increase the cwnd
+				\end{itemize}
+				The algorithm therefore works by first starting in slow start with cwnd = 1 and is knwon as additive-increase,multiplicative-decrease (AIMD)
+				\begin{itemize}
+					\item Slow start - First the rate is 1 MSS, then for every acknowledged segment 1 MSS is added to cwnd essentially doubling it until a problem occour. When that happends a variable ssthresh is initiated to cwnd/2 and cwnd is set to 1. Then again slow start is begun on it until it reaches sshtresh from which congestion avoidance is begun. In case of 3 dublicates fast receovery is ran with ssthresh = cwnd/2 and cwnd = sshtresh + 3MSS
+					\item Congestion avoidance - Now cwnd is incremented only by MSS/cwnd until a problem occour. If a dublicate occour three times sshtresh is updated to cwnd/2, cwnd is set to ssthresh + 3 MSS and fast recovery is ran. If a timeout occurs sshtresh is set to cwnd/2 and cwnd is set to 1.
+					\item Fast recovery - cwnd is incremeneted by a single MSS. In a timeout sshtresh = cwnd/2, cwnd=1 and slow start is begun.
+				\end{itemize}
+				The Cubic version is an alternative where the congestion avoidance saves the last max limit it reached and then cubicly reaches it such the farther the distance to the maximum the more cwnd is increased.\\[4mm]
+				The network assisted version works by, the router sets the ECN (Explicit congestion notification echo) flag on a segment to the receiver, which also sets it in the acknowledgment. Which result in hafling the congestion window\\
+				Delay based congestion control works by using the RTT, if the sender then measures a significantly less tha nthe uncongested througput rate, then it slows down the sending rate. Essentially it works by avoiding queues.\\[4mm]
+				It can be seen TCP will fairly share bandwith and conestion controle will be equal in multiple TCP connections over time.\\
+				This is unlike UDP which will not behave fair and force TCP to get less bandwith without itself taking less.
+		\subsection{QUIC}
+			QUIC is an extension to the UDP protocol, which provides features from TCP.\\
+			A handshake is initiated, but it only needs a single send and receive to setup therefore saving a whole RTT over TCP.\\
+			Even QUIC-0 can be used in case of recent connection where no handshake is needed as saved params are used.\\
+			QUIC provides encryption of packages and uses http3.\\
+			QUIC uses reliable, and congestion controlled data transfer features from TCP
+		\subsection{TLS}
+			Transport Layer Security (TLS) is an extension to TCP which gives it security in the form of: encryption, integreity and authentication.\\
+			Websites using TLS is recognized by the use of https.\\
+			TLS acts as a sublayer in the TLS socket and applies it security.\\
+			When running TLS the data is split up into records which is encrypted and hashed using HMAC.\\
+			The TLS record consist of: Type, Version, Length, Data, and HMAC, where data and HMAC is encrypted with $E_B$\\
+			The type field is used for a copy of the TCP type, such as FIN flags but by using it in the TLS, it is included in the hashing such no tampering of the TCP flags will destroy the connection.\\
+			Likewise is the sequence numbe and length of message also part of the hash .\\
+			A TLS connection is as follows:
+			\begin{enumerate}
+				\item A list of supported cryptographic algos and a nonce is sent from client
+				\item Server chooses a cryptographic alg. for symmetric key, public key and hmac. Then responds with choices, certificate and server nonce
+				\item Client confirms certifcate and gets server public key, generates Pre-Master Secret (PMS), and sends encrypted PMS with server public key
+				\item Using the choosen algos the server and client generates Master Secret (MS) from PMS and nonce. The MS is sliced up into: 2 encryption keys, 2 HMAC keys, initialization vectors in case of symmetric cipher
+				\item Client send HMAC of all handshake messages
+				\item Server send HMAC of all handskake messages
+			\end{enumerate}
+			The HMAC handshake messages are used to ensure integrety of the non encrypted handshakes before. Likewise is the nonce used to prevent replay attacks. \\
+			The keys generated from the MS is denoted
+			\begin{itemize}
+				\item $E_B$ session encrypted key for data from client to server
+				\item $M_B$ session HMAC key for data from client to server
+				\item $E_A$ session encryption key for data from server to client
+				\item $M_A$ sessuin HMAC key for data from server to client
+			\end{itemize}
+	\section{OWASP - Top ten seciruty risk}
+		Open Web Application Security Project conducted a list of biggest security risk based on data on attacks. The following the that top then in order. 
+		\subsection{Broken Access Control}
+			The biggest problem is allowing attacker acces to data or controle which was not intended.\\
+			This may be can be through websites, API or any other access to data or controle.\\
+			Problem often occur due to amount of access points and lack of testing.\\
+			Attackers often use modification of accessible data, such as cookies or url which may not be sanitized.
+		\subsection{Cyptographic Failues}
+			Many systems and companies may use old cryptography or non at all on sensitive data.\\
+			This can also be in form of transportion of data both internal and external.\\
+			Lack of this will result in case of leaks actually exposed data rather than encrypted data.
+		\subsection{Injection}
+			Injections occur when user data is sent to an interpreter without sanitizing the input.\\
+			The can be queries for databases or bad designs for inputs which can result in bad input.\\
+			This can be in buffer overflows which may allow injection of code and gaining access to higher priveledge.\\
+		\subsection{Insecure Design}
+			Insecure design is not the implementation but rather the security choices.\\
+			This can be password recoveries which is too weak or intern protocols which may be too weak when handlign sensitive data
+		\subsection{Security misconfiguration}
+			This may be outdated libraries or default setting which is unchanged and therefore leaves a vulnarability.\\
+			This may also be in case of settings for development end up in production leaving a open backdoor or like wise.
+		\subsection{Vulnarable and outdated components}
+			Likewise seciruty misconfiguration but this focus more on the oudated packages or libraries which may be in use.\\
+			The libraries may contain vulnerabilities which can gain acces to the code or data.\\
+			This is prevented by subscribing to bulletins of included libraries or packages and keeping them up to date.
+		\subsection{Identification and authentication failues}
+			Bad implementation of authentication which gives attackers opportunities to gain access via session tokens, keys or passwords.\\
+			This can be in the form of, allowing brute force attacks, allowing weak passwords or having a weak password recovery\\
+			A good solution is often implementing two step authentication.
+		\subsection{ Software and data integrity failues}
+			This happends when an attacker identifies as software or plugin and forces an update upon working code.\\
+			This may also be if an attacker simply notices a data stream which does not check for integrety and themselves may send attacking data.
+		\subsection{Security logging and monitoring failures}
+			Most attacks are not detected before 200 days after.\\
+			This is due to lack of securty logging and monitoring attacking attemps.\\
+			A better monitor or log may capture attemps and warn of risky areas before an attack happen
+		\subsection{Server side request forgery}
+			When a web application is fetching remote ressource without validation.\\
+			This may lead to an attacker beign able to load attack ressources onto the application.\\
+			This is prevented having a firewall which block all trafic beside the known remote places.\\
+	\section{Penetration testing}
+		The two most comon forms of penetration tests are:
+		Application penetrations testing and infrastructure penetration testing.\\
+		Other types are
+		\begin{itemize}
+			\item Mobile application
+			\item Device penetration testing (laptops, consumer devices)
+			\item Wireless penetration testing
+			\item Telephony or VoIP 
+		\end{itemize}
+		There are three different types of intruders
+		\begin{itemize}
+			\item Hackers - Experimentally minded programmers targets security loopholes in it system
+			\item Crackers - Exploits weak points of it systems to gain illegal advantages
+			\item Insiders - Type of crackers with inside knowledge
+			\item Script kiddies - Uses attack tools
+		\end{itemize}
+		There are mainly 3 different types of attacks
+		\begin{itemize}
+			\item Network based attacks - attacks using network protocol functionalities this includes port scanning, IP spoofing, sniffing, session hijacking, DoS attacks, buffer overflow and format string attacks
+			\item Social engineering - Maniupulating people to revela security related information 
+			\item Circumventing of physical security measures - By using physical attacks and gaining access to physcial data or authority
+		\end{itemize}
+		A company should have secuirty policies and secuirty concepts, without that a pen test would not even be helpfull.\\
+		The procedure of pen testing are in the following steps
+		\begin{enumerate}
+			\item Research information about the target system - information like official IP address
+			\item Scan target systems for service on offer - Using a port scan internet services can be found
+			\item Identify systems and applications - By using fingerprints in the prt scan
+			\item Research vulnerabilities - Finding exploits in systems with open ports from fingerprints
+			\item Exploirt vulnarabilities - Using the known vulnerabilities and gaining access for further attacks
+		\end{enumerate}
+		\subsection{Classifying pen tests}
+			Starting point - Attack of penetration most common: firewalls, web servers, RAS access points and wireless networks.\\
+			External servers are known as normal workstations.\\
+			Web serbers are often vulnarable due to there minufold of functions\\
+			Pen testing is usefull since security audits and IT audits most often focus in IT infrastucture in terms of compliance, efficiency nad efectivness.\\
+			The goals of pen testing should be clear and can be divided into four categories\\
+			\begin{itemize}
+				\item Improving security of techinal systems - This can be finding improvements in firewalls, routers, web servers, etc..
+				\item Identifying vulnarabilities - This is the actual objective of the test
+				\item Having IT security confirmed by an external third party - The IT system and infrastructures current security
+				\item Improving security of orginazational and personnel infrastructure - This is often in form of social engineering
+			\end{itemize}
+			The limtis of a pen test is the fast discovery of new vulnarabillities making pen test only validation of security currently but not in the future.\\
+			Likewise does the pen test reduce the probabillity of a successfull attack.\\
+			The type of attack is also classified to test a given scenario\\
+			\begin{figure}[h!]
+				\centering
+				\includegraphics[width=300px]{assets/penClassification.png}
+			\end{figure}
+			\begin{itemize}
+				\item Information base - The amount of known information, where black box represent the unknown insider information unlike white box
+				\item Aggressiveness
+				\begin{itemize}
+					\item Passively - Vulnerabilities are detected but not exploited
+					\item Cautious - Vulnarabilites are only tested when it will not result in system suffering
+					\item Calculated - Exploits vulnarabilities which may result in system disruptions
+					\item Aggressive - Exploit every vulnarability even if deactivating systems or overloading
+				\end{itemize}
+				\item Scope - The amount of testing which directly relates to time spent, focused sub network after modifcation, limited number of systems, full everything avaliable
+				\item Approach - How visible the attack is, covert stealthy, overt often with staff such fixes can fast be done
+				\item Technique - Networks based using network protocols also known as IP-based pen test, Other communcation networks, mobile, fax, wireless networks etc., physical in case of good enough firewall, social engineering people are frequently the weakest link
+				\item Starting point - Is the test performed from an outside perspective, or inside networks where firewalls do not have to be overcome
+			\end{itemize}
+			Most often a combination of pen tests are adviceable.
+		\subsection{Legallity and ethical issues}
+			There are different legal issues which rises from pen testing.\\
+			For a company pen testing may be needed, to ensure data security to compart with laws.\\
+			When a pen test is performed approval by client in all areas is required.\\
+			Likewise often 3rd oarty also need to approve the test\\
+			The test should have a liability to cover claims from 3rd parties.\\
+			Ethical issues also araise with social enginering in case of wanted anonymity.	
+		\subsection{Phases of pen testing}
+			\begin{figure}[h!]
+				\centering
+				\includegraphics[width=300px]{assets/penPhases.png}
+			\end{figure}
+			Preparation - agree on scrope and cost based on classification, contracts in plase and discuss risks\\
+			Reconnaissance - passive test, where information is obtained and overview of system.\\
+			Tool for data collection
+			\begin{itemize}
+				\item whois
+				\item https://website.informer.com/
+				\item namp 
+				\item https://spokeo.com/
+				\item osint examples 
+				\begin{itemize}
+					\item https://www.shodan.io/
+					\item https://www.spiderfoot.net/
+					\item https://github.com/laramies/theHarvester
+				\end{itemize}
+			\end{itemize}
+			Analyzing infromation and risks - use data to find risk and determine which to test based on goals and time\\
+			Active intrusion attempt - This phase test the vulnarabillities found, it is here important to consider actual risks and whihc risk are not affecting the product/organization\\
+			Final analysis - Evaluate the vulnarabilities and where they where found and recommandation to eliminate them\\
+		\subsection{Tools}
+			\begin{itemize}
+				\item Kali linux - OS with preinstalled tools
+				\item Nmap - port scanning
+				\item NCAT - Read/ write network connection using TCP or UDP
+				\item Metasploit - Frameowrk woth most common exploits
+				\item SQLmap - Detecting and xploiting sQL injections flaws
+				\item NIKTO - Scan for harmful files, misconfigurations, outdated software installations on web server
+				\item BURPSUITE - Pen testing web application tool
+				\item John the riper - Tool for cracking password
+				\item NESSUS - vulnerability scanner (not free)
+				\item Wireshark - Packet sniffer and network analyzer tool
+				\item AIRCRACK-NG - wireless network tool
+				\item Tool list - https://sectools.org/
+			\end{itemize}
+	\section{The network layer: Data plane}
+		The role of the network layer is the route packets from host to receiver.\\
+		Routing is done by the all routers by each forwarding the packet from input to correct output link.\\
+		This is done using routing algorithms.\\
+		The result of routing algorithms is a forwarding table which determines which output link the router should forward to.\\
+		There are two approaches to creating the forwarding table either the routers share their tables between eachother using a routing protocol.\\
+		Or the SDN approach where an external remote controller creates tables for routers and send them it. This can be done by third parties or ISP.\\
+		SDN stands for software-defined networking.\\
+		The networks service model is defined to be best-effort service therefore many features are not implemented other than trying to deliver.
+		\subsection{What is insde a router}
+			Input ports is used for terminatign incomming physical link.\\
+			The input performs the lookup function to the forward table via the switching fabric.\\
+			In case of a control packet the packet is forwarded to the routing processor.\\
+			The switching fabroc connects the input and output ports.\\
+			The putput ports store the sending packets and perform the necessary link-layer and physical layer functions.\\
+			THe routing processor maintains the router, by updating the forwarding tables or in case of SDN connects to remote and update forward tables.\\
+			The forwarding tables matches a prefix of the packets destination address.\\
+			If a match does not exist it exists via the default port.\\
+			If multiple matches the longest is choosen.\\
+			If the ports is in use the fabric blocks the package and queues it.\\
+			All this has to happend in hardware to keep up with transfer speeds.\\
+			The input port also has to, physical and link layer processing, check the checksum and time to live, update counters and time to live.\\
+			\subsubsection{Switching}
+				The act of switching can be done through different methods.\\
+				The simplest version switching via memory, copies inputs into processor memory and let the processor due to moving to output.\\
+				This is limited to memory bandwidth and therefore the transfer will be limited to half the memory bandwaidth.\\
+				Switching via a bus transfers packets via a bus, then every packet get appended a label and the matching output port keeps the packet the rest throws it away.\\
+				The label is then removed before sending.\\
+				This is then limited to the bus speed since only one package can be worked with at a time.\\
+				Switching via an interconnection network, uses a crossbar switch, where a bus from every input goes over output ports bus, such an intersect is present for each.\\
+				Then the intersect between input and output is turned on to forward the package.\\
+				This results in the package only being blocked in case of the wanted output is taken.\\
+				More sophisticated approached uses a stacked interconnect such the output can contain multiple packages
+			\subsubsection{Queue and buffers}
+				Queue can occuor both on output and input, input will happen when either too many packages comes into one input at once or head of the line (HOL) blocking, where another input waits for output and therefore block the input buffers.\\
+				Output will occur if the transmission rate is slower than the forwarding and input.\\
+				When queue occuor either the latest (drop tail) is dropped or a random picked using an active queue management algorithm\\
+				The drop tail has the advantage of faster congestion signalling to sender.\\
+				The size of the buffer has to be large enough to prevent package lost too fast in case of a burst, but smaller than queuing delays are too high.\\
+				The rule of thumb is a buffer size equal to 
+				$$B=RTT\cdot C/\sqrt{N}$$
+				Where $C$ iis the link capacity and $N$ is the number of independent TCP flows.\\
+				TCP is part of the equation since in case of a buffer being filled up, since TCP will recieve an ACK for every sent from the buffer the buffer will never empty known as bufferbloat.\\
+				For emptying the queues different approaches can be taken
+				\begin{itemize}
+					\item First in first out FIFO - The packages is handled in the same order as arrival
+					\item Priority queuing - The packages are classified upon arrival which then is handled in priority order
+					\item Round Robing and Weighted fair queung - Like priority queuing, but to ensure every package is sent at some point the queues is served in a circular manner. The class weight then determines the time used pr. queue such higher priority equals more time spent in the queue before moving on.
+				\end{itemize}
+		\subsection{The interprotocol (IP)}
+			\subsubsection{IPv4}
+				The datagram of an IPv4 is
+				\begin{itemize}
+					\item Version number - 4 bits to determine version number like IPv6
+					\item Header length - IPv4 datagram contains variable headers therefore 4 bits is used for indicating size
+					\item Type of service - Used to distinguish if the package is a real-time datagram or an non-real-time traffic like FTP, in here two bits are also used for congestion control
+					\item Identifier, flags, fragmentation offset - Used for IP fragmentation 
+					\item Time-to-live - Counter for number of routers which the package can be sent through before being dropped
+					\item Protocol - A number representing which protocol is used after the IP the handle the data like TCP or UDP
+					\item Header checksum - Checksum of the integer value of every second header values sum. Recalculated for each router step since headers changes like time to live
+					\item Source and destintion IP
+					\item Options - Allow to extend the IP headers further
+					\item Data
+				\end{itemize}
+				The header is 20 bytes without options and with IP the size is 40 bytes\\
+				An interface is the boundary between link and host and has each their own IP.\\
+				With a 32 bit long IPv4 the total number of IPs is $2^{32}$ or aprox 4 billion\\
+				The IP is formatted into 4 chunks bytes which is written in decimal with dots between the decimals.\\
+				Subnets can be defined such a prefix is the identifier and then the whole subnet uses the prefix and the rest is for intern routing.\\
+				This is in the format a.b.c.d/x where x is the number of bits used for the prefix and the rest is the subnet.\\
+				This is known as Classless interdomain routing (CIDR). This allows for subnets to have way smaller forwarding tables.\\
+				Before CIDR the subnets size was bounded to 8, 16 or 24 bits making the jump from 8 to 16 very large.\\
+				255.255.255.255 is used for sending a package to every device in the subnet.\\
+				To get a subnet the isp is contacted which will give part of their subnet to the company.\\
+				The isp subnet is managed by regionals which is managed by Internet corporation for assigned names and numbers (ICANN).\\
+				ICANN is a NPO which mangages DNS root servers, assigning fmain names and resovlg=ving dfomain name disputes.\\ 
+			\subsubsection{Obtaining an address}
+				Dynamic Host Configuration Protocol DHCP is a protocol used to configure devices by admins.\\
+				DHCP allows to assign a static IP to devices or temporary IP.\\
+				DHCP requires a server or device which reulays the DHCP protocol.\\
+				The protocol consist of
+				\begin{itemize}
+					\item DHCP server discovery, which is an udp packet send to port 67 to 255.255.255
+					\item DHCP server offer(s) - Once a discovery is gotten a offer is sent back to the subnetwork, and contains transaction ID, proposed IP, network mask and IP address lease time (The time the ip is valid)
+					\item DHCP request - Client chooses from offers and respond to the wanted by echoing the content
+					\item DHCP ACK - an acknowledment message is sent confirming the device
+				\end{itemize}
+				The problem with DHCP is the requirement for the protocol for every subnet which is a problem in case of more routers in large areas.
+			\subsubsection{Network address transaltion (NAT)}
+				NAT is a method for using a routers as a single device.\\
+				This allows for a single IP which is shared among the local network.\\
+				This works by when a device sent a package to the router, the request is contains the wanted IP and a socket to the device from route.\\
+				The router then rewrites the source and source ip to the wan ip.\\
+				This allows up to 60,000 devices on one network with 1 ip address.\\
+				This is argued against since is reuses port numbers for addressing purposes.\\
+				This also requires for server like application a NAT traversal tool for finding open ports in the local network.\\
+				ANother problem is it ruins the archtiecture of the internet, by not assigning devices an IP but rather a number of devices.\\
+			\subsubsection{IPv6}
+				The problem with IPv4 is the limited amount of IPs.\\
+				The last IPv4 address space was given out in 2011 to a reginal registry.\\
+				There is open IPv4 address in regionals but the global pool is empty.\\
+				IPv6 uses 128 bits to create IPs making sure it will never be problem again.\\
+				The format goes as
+				\begin{itemize}
+					\item Expanded addressing capabilities - This allows to send a package to an IP group 
+					\item A streamlined 40 byte header 
+					\item Version - nubmerical value 4 for IPv4 and 6 for IPv6
+					\item Traffic class - 8 bit field for priority certain diagrams
+					\item Flow label - Allowing to label packages as flow and given them optional priority
+					\item Next header - Like to protocol in IPv4
+					\item Hop limit - Like time-to-live in IPv4
+					\item Source and destination addresses
+					\item Data
+				\end{itemize}
+			\subsubsection{Openflow}
+				Openflow is the mechanism which performs the match and action for packages.\\
+				The mathc is done over the whole datagram, including link,- network,- and transport layer.\\
+				The there means\\
+				\begin{tabular}{|c|c|c|c|c||}
+				\hline
+				Ingress port &&&&\\
+				\hline
+				src MAC & dst MAC & eth Type & VLAN ID & VLAND Pri \\
+				\hline
+				IP src & IP dst &&&\\
+				\hline
+				IP proto & IP TOS & TCP/UDP src port & TCU/UDP dst port&\\
+				\hline
+				\end{tabular}
+				From this a flow table is generated which states rules, and matching will be used in priority order.\\
+				Each row then has a list of action which in done in the given order.\\
+				The include forwarding, dropping and modifying fields.\\
+				This can be used to create firewalls by blocking IP or methods by dropping the matching columns
+			\subsubsection{Fragmentation}
+				The fragmentation of a packet is the act of splitting up the package such they can fit into the maximum transfer unit (MTU)\\
+				The header will have offset set such the packets order can be seen and is divided by 8 bytes to save space.\\
+				The offset will come from the previous packages data length (not inclduding header 20 bytes if no options)\\
+				The fragflag is not raised on the final package. \\
+				The fragflag is raised and the ID will match across the framentations.\\
+	\section{Control plane}
+		\subsection{Routing algorithms}
+			Routing algorithms is used to find the least cost routes between sender and receiver.\\
+			The cost may reflect, physical length, speed or mentary cost of links.\\
+			Two nodes cost is said to be $c(x,y)$ and in case of not being connected the cost is infinite.\\
+			The graphs is considered undirected.\\
+			Centralize routing algorithmms use global knowledge of the network.\\
+			To communicate a link-state broadcase algorithm is used. From this the Dijkstras aglorithm can be used to find least cost to each node.\\[4mm]
+			The algorithm will run at a centralized unit and the algorithms is refered to as link-state (LS) algorithm\\
+			Decentralized rounting uses iterative, distributed manner by the routers.\\
+			The routers only have knowledge of neightbour routes and the cost to them.\\
+			The routers then exhange information about their neightbours to calculate the cost further.\\
+			This is called distance-vector (DV) algorithm.\\
+			This is done async by to nodes does need to work at same time, and iterative by how each nodes send and updates on changes.\\
+			The network cost is then calculated using bellman-fords algorithm.\\[4mm]
+			Algorithms can also be classifed by being static which change slowly over time.\\
+			And dynamic which changes for every traffic loads or topology change.\\
+			Load sensitive algorithms takes the package load into account to congestion.\\
+			\subsubsection{Problems}
+				Oscillations is where a network of nodes oscillates between two optimal path and therefore never end termination.\\
+				To prevent this the routers send their link advertisment at random intervals to also prevent self-synchronizing.\\
+				Count to infinity problem occur if the nodes A,B and C is connected with cost 1.\\
+				If B and C is disconnected and does not send an update before A sends an update to B and advertise its length to C at 2.\\
+				This will then result in B updating to 2, A updating to 3 since it used B to get to C. This will then keep happening until they count to infinity.\\
+				A solution which works with small node envirements is the poisoned reverse, which advertises when routes is broken or increased.
+			\subsubsection{BGP}
+				BGP is a protocol for connection between AS\\
+				In the AS there are two types of routers, gateway routers on the edge connecting between AS and internal.\\
+				The BGP protocol uses TCP since it needs to transfer large amount of data, here the forwarding tables in other AS.\\
+				The BGP protocol comes in two types iBGP and eBGP\\
+				iBGP is for internal use, such when a new forwarding table has come into the AS it is shared between internal routers using iBGP\\
+				eBGP is external BGP which communicates between different ASs.\\
+				A new external forwarding table may include everything to AS1 goes through routerA.\\
+				The internal then simply uses the optimal path to get the a router which is a gateway.\\
+				BGP routing is done through different methods
+				\begin{itemize}
+					\item Hot potato - The AS focuses only on reducing cost internally and ignore outside policies.
+					\item Route-selection - This is the used algorithm used in case of multiple routes and the route is selected in the given order
+					\begin{itemize}
+						\item Check local preferences on attributes which is determined by policies
+						\item The shortes AS path is chosen
+						\item Hot potato is used
+						\item BGP identificers is used to select
+					\end{itemize}
+				\end{itemize}
+				BGP is also used to find the nearest DNS server, using IP-anycast.
+			\subsubsection{SDN control plane}
+				Software defined network (SDN) network with seperated controller.\\
+				A SDN network can be identified by the following characteristics
+				\begin{itemize}
+					\item Flow based forwarding - Packet forwarding can be don based on any number of header fields
+					\item Seperation of data plane and control plane - Instead of the routers doing both data and controle plane, is the control plane done by a seperate entity
+					\item Network control functions - Communicate between a SDN controller and network control applications
+					\item A programmable network - Using API in the SDN controller the network switches can be programmed
+				\end{itemize}
+				A SDN controller consist of 
+				\begin{itemize}
+					\item A communication layer - Communication between SDN controller and controllers using open flow or other protocols
+					\item A network-wirde state-management layer - Control decisions, such as flow tables, load balancing or firewalling capability
+					\item The interface to the network-control application layer - Interfaces for read/write network state and flow table
+				\end{itemize}
+				In practise the SDN controller consist of distrubted set of servers for fault tolerance, hight availability and performance.
+			\subsubsection{Openflow}
+				Openflow uses the TCP protocol over port 6653\\
+				Openflow allows for messages from SDN controller to controlled switch 
+				\begin{itemize}
+					\item Configuration - Set a switch configuration params
+					\item Modify-state - Add/delete entries in the flow table
+					\item Read-state - Collect statisticts from flow table and ports
+					\item Send-packet - Send a packet using the controller
+				\end{itemize}
+				From the controller switch the SDN controller can get the packages
+				\begin{itemize}
+					\item Flow-removed - Flow entry on table has been removed
+					\item Port-status - Change in ports
+					\item Packet-in - Packets wich does not match table or should be sent to controller
+				\end{itemize}
+				
 \end{document}
