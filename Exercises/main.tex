@@ -458,5 +458,182 @@
 			Consider the following network\\
 			\includegraphics[width=300px]{assets/9.5.png}\\
 			By using local\_pref the bgp can force isp B to handover data on given gateways on the east coast.
-			
+	\section{Lecture 10}
+		\subsection{IPsec}
+			Answer the following true/false statements in the following scenario.\\
+			\includegraphics[width=300px]{assets/10.2.png}\\
+			\subsubsection{When a host in 172.16.1/24 sends a datagram to an Amazon.com server, the router R1 will encrypt the datagram using IPsec}
+				False the IPsec connection is only between R1 and R2 and any connection outside will not be using IPsec.
+			\subsubsection{When a host in 172.16.1/24 sends a datagram to a host in 172.16.2/24, the router R1 will change the source and destination address of the IP datagram.}
+				True since R1 is the router it will contain a NAT unit for translating local addresses to external addresses.
+			\subsubsection{Suppose a host in 172.16.1/24 initiates a TCP connection to a Web server in 172.16.2/24. As part of this connection, all datagrams sent by R1 will have protocol number 50 in the left-most IPv4 header field}
+				True since the connection is using IPsec the IP packet will have the protocol number 50.
+			\subsubsection{ Consider sending a TCP segment from a host in 172.16.1/24 to a host in 172.16.2/24. Suppose the acknowledgment for this segment gets lost, so that TCP resends the segment. Because IPsec uses sequence numbers, R1 will not resend the TCP segment.}
+				False since it will be the network layer which detect a lack of acknowledgement a new IP packet is reconstructed and the sequence number will be updated so no a new packet will be sent.
+		\subsection{Configuring ACL for a Firewall}
+			Provide a filter table and a connection table for a stateful firewall that is as restrictive as possible but accomplishes the following\\
+			\begin{itemize}
+				\item Allows all internal users to establish Telnet sessions with external hosts.
+				\item Allows external users to surf the company Web site at 222.22.0.12.
+				\item But otherwise blocks all inbound and outbound traffic
+			\end{itemize}
+			The internal network is 222.22/16.\\
+			\begin{table}[]
+			\begin{tabular}{|l|l|l|l|l|l|l|}
+			\hline
+			\textbf{Action} & \textbf{Source address} & \textbf{Dest address} & \textbf{Protocol} & \textbf{Source port} & \textbf{Dest port} & \textbf{Flag} \\ \hline
+			Allow           & 222.22/16               & any                   & TCP               & any                  & 23                 & any               \\ \hline
+			Allow           & any                     & 222.22.0.12           & HTTP              & any                  & 80                 & any               \\ \hline
+			Disallow        & any                     & any                   & any               & any                  & any                & any               \\ \hline
+			\end{tabular}
+			\end{table}
+		\subsection{Attacking link-state algorithm}
+			How to prevent attackers from sending false or fake link-state messages?\\
+			By using a signature on LSAs a hacker had to first comprimise the LSA before being able to send messages.\\
+			Moreover the messages could be compared with neighbors messages, this would require more computing by LSAs but by this a larger network of comprimised LSAs had to be made.
+	\section{Lecture 11}
+		\subsection{CRC: COnsider the 5 bit generator $G=1001$ and suppose that $D=11000111010$ what is $R$?}
+			\[\setlength{\arraycolsep}{0pt}
+			\begin{array}[t]{*{14}{l}}
+				1&1&0&0&0&1&1&1&0&1&0&0&0&0\\
+				1&0&0&1&\\ \cline{1-4}
+				&1&0&1&0&\\
+				&1&0&0&1&&&&&&&&&\\\cline{2-5}
+				&&0&1&1&1&&&&&&&&\\
+				&&0&0&0&0&&&&&&&&\\\cline{3-6}
+				&&&1&1&1&1&&&&&&&\\
+				&&&1&0&0&1&&&&&&&\\\cline{4-7}
+				&&&&1&1&0&1&&&&&\\
+				&&&&1&0&0&1&&&&&\\\cline{5-8}
+				&&&&&1&0&0&0&&&\\
+				&&&&&1&0&0&1&&&\\\cline{6-9}
+				&&&&&&0&0&1&1&&\\
+				&&&&&&0&0&0&0&&\\\cline{7-10}
+				&&&&&&&0&1&1&0&&\\
+				&&&&&&&0&0&0&0&&\\\cline{8-11}
+				&&&&&&&&1&1&0&0\\
+				&&&&&&&&1&0&0&1\\\cline{9-12}
+				&&&&&&&&&1&0&1&0\\
+				&&&&&&&&&1&0&0&1\\\cline{10-13}
+				&&&&&&&&&&0&1&1&0\\
+				&&&&&&&&&&0&0&0&0\\\cline{11-14}
+				&&&&&&&&&&&1&1&0\\
+			\end{array}:1001=11011100110
+			\]\\
+			R=110
+		\subsection{VLAN: consider the single switch VLAN in the figure below}
+			\includegraphics[width=300px]{assets/11.2.png}\\
+			and assume an external router is connected to switch port 1. Assign IP addresses to the EE and CS hosts and router interface.\\
+			Trace the steps taken at both the network layer and the link layer to transfer an IP datagram from an EE host to a CS host\\
+			EE can be assigned 111.111.111/24\\
+			CS can be assigned 222.222.222/24\\
+			To transfer an IP datagram the IP in the datagram is the receiving host and for the link layer to receiver is set to the mac address of the router in port 1.
+		\subsection{Addressing, Subnets, ARP: Consider the figure below}
+			\includegraphics[width=300px]{assets/11.3.png}\\
+			Now we replace the router between subnets 1 and 2 with a switch S1, and label the router between subnets 2 and 3 as R1
+			\subsubsection{Consider sending an IP datagram from Host E to Host F. Will Host E ask router R1 to help forward the datagram? Why? In the Ethernet frame containing the IP datagram, what are the source and destination IP and MAC addresses?}
+				Since E and F is on the same LAN they can send to eachother without use of the router.\\
+				The IP and MAC address source and destionation will simply match host E and F.
+			\subsubsection{Suppose E would like to send an IP datagram to B, and assume that E’s ARP cache does not contain B’s MAC address. Will E perform an ARP query to find B’s MAC address? Why? In the Ethernet frame (containing the IP datagram destined to B) that is delivered to router R1, what are the source and destination IP and MAC addresses?}
+				E will not perform an ARP action since it has to use the router to forward the link-layer frame. It will therefore use the router MAC address as destination and Bs IP as IP destionation and itself as source for both IP and MAC.
+			\subsubsection{ Suppose Host A would like to send an IP datagram to Host B, and neither A’s ARP cache contains B’s MAC address nor does B’s ARP cache contain A’s MAC address. Further suppose that the switch S1’s forwarding table contains entries for Host B and router R1 only. Thus, A will broadcast an ARP request message. What actions will switch S1 perform once it receives the ARP request message? Will router R1 also receive this ARP request message? If so, will R1 forward the message to Subnet 3? Once Host B receives this ARP request message, it will send back to Host A an ARP response message. But will it send an ARP query message to ask for A’s MAC address? Why? What will switch S1 do once it receives an ARP response message from Host B?}
+				When the ARP message is sent it will be forwarded by the switch. Therefore both B and R1 will receive the ARP.\\
+				The router will not forward the ARP and B will itself reply to the ARP.\\
+				B does not in turn need to send an ARP since it can update its own table from the request.
+		\subsection{Full protocol stack overview}
+			In this problem, you will put together much of what you have learned about Internet protocols. Suppose you walk into a room, connect to Ethernet, and want to download a Web page. What are all the protocol steps that take place, starting from powering on your PC to getting the Web page? Assume there is nothing in our DNS or browser caches when you power on your PC. (Hint: The steps include the use of Ethernet, DHCP, ARP, DNS, TCP, and HTTP protocols.) Explicitly indicate in your steps how you obtain the IP and MAC addresses of a gateway router.\\
+			First the laptop has to obtain an IP using DHCP.\\
+			From this it has to discover the router on the network using ARP.\\
+			Then DNS is used for getting the IP of the website, using an UDP packet.\\
+			Knowing the IP a TCP can be setup with the website host.\\
+			Using TCP a HTTP Get request can be sent and the html website can be received.\\
+			The TCP is then closed.\\
+			All these packets have then used the ethernet protocol and IP protocol as layers for sending the packages.
+		\subsection{Error detection and correction}
+			Show (with a 3 by 3 data bit matrix) that two-dimensional parity checks can correct and detect a single bit error. Show (give an example of) a double-bit error that can be detected but not corrected.\\
+			for the matrix
+			$\begin{array}{ccc|c}
+				1&1&1& 1\\
+				1&1&1&1\\
+				1&1&1&1\\
+				\hline
+				1&1&1&
+				\end{array}$ in case of bit error $\begin{array}{ccc|c}
+				1&0&1& 0\\
+				1&1&1&1\\
+				1&1&1&1\\
+				\hline
+				1&0&1&
+				\end{array}$ it can be seen that it through the parity the first row at column 2 is the error
+		\subsection{ARP:  Consider three LANs interconnected by two routers, as shown in the figure below}
+			\includegraphics[width=300px]{assets/11.3.png}\\
+			\subsubsection{Assign IP addresses to all of the interfaces. For Subnet 1 use addresses of the form 192.168.1.xxx; for Subnet 2 uses addresses of the form 192.168.2.xxx; and for Subnet 3 use addresses of the form 192.168.3.xxx.}
+				A: 192.168.3.1\\
+				B: 192.168.3.2\\
+				C: 192.168.2.1\\
+				D: 192.168.2.2\\
+				E: 192.168.3.1\\
+				F: 192.168.3.2
+			\subsubsection{Assign MAC addresses to all of the adapters}
+				A: AA:AA:AA:AA:AA:AA\\
+				B: BB:BB:BB:BB:BB:BB\\
+				C: CC:CC:CC:CC:CC:CC\\
+				...
+	\section{Lecture 12}
+		\subsection{Wifi access to subnet}
+			After selecting the AP with which to associate, a wireless host sends an association request frame to the AP, and the AP responds with an association request frame. Once associated with an AP, the host will want to join the subnet (in the IP addressing sense) to which the AP belongs. What does the host do next?\\
+			It will use DHCP to get assigned an IP, which in return will make it part of the subnet.
+		\subsection{Wifi access}
+			Suppose there are two ISPs providing WiFi access in a particular café, with each ISP operating its own AP and having its own IP address block.
+			\subsubsection{Further suppose that by accident, each ISP has configured its AP to operate over channel 11. Will the 802.11 protocol completely break down in this situation? Discuss what happens when two stations, each associated with a different ISP, attempt to transmit at the same time}
+				I will not completly break down, but collision will be very likely and therefore the connection would be very unstable.
+			\subsubsection{Now suppose that one AP operates over channel 1 and the other over channel 11. How do your answers change?}
+				Since the APs is now more than 4 channels away from eachother there frequencies will not overlap and in result not collide with eachother.
+		\subsection{CSMA/CA}
+			In step 4 of the CSMA/CA protocol, a station that successfully transmits a frame begins the CSMA/CA protocol for a second frame at step 2, rather than at step 1. What rationale might the designers of CSMA/CA have had in mind by having such a station not transmit the second frame immediately (if the channel is sensed idle)?\\
+			By checking if the AP is still idle after transmitting, it can make it possible for the host to send chained frames instead of creating new datagrams for the frames and wait for a new open slot.
+		\subsection{WiFi effectivity}
+			Consider the scenario in which there are four wireless nodes, A, B, C, and D. The radio coverage ofthe four nodes is shown via the shaded ovals; all nodes share the same frequency. When A transmits, it can only be heard/received by B; when B transmits, both A and C can hear/receive from B; when C transmits, both B and D can hear/receive from C; when D transmits, only C can hear/receive from D. Suppose now that each node has an infinite supply of messages that it wantsto send to each of the other nodes. If a message’s destination is not an immediate neighbor, then the message must be relayed. For example, if A wants to send to D, a message from A must first be sent to B, which then sendsthe message to C, which then sends the message to D. Time is slotted, with a message transmission time taking exactly one time slot, e.g., as in slotted Aloha. During a slot, a node can do one of the following: (i) send a message,(ii) receive a message (if exactly one message is being sent to it), (iii) remain silent. As always, if a node hears two or more simultaneous transmissions, a collision occurs and none of the transmitted messages are received successfully. You can assume here that there are no bit-level errors, and thus if exactly one message is sent, it will be received correctly by those within the transmission radius of the sender.\\
+			\subsubsection{Suppose now that an omniscient controller (i.e., a controller that knows the state of every node in the network) can command each node to do whatever it (the omniscient controller) wishes, i.e., to send a message, to receive a message, or to remain silent. Given this omniscient controller,what is the maximum rate at which a data message can be transferred from C to A, given that there are no other messages between any other source/destination pairs?}
+				Since it must be transmitted throug B the maximum rate is 2 slots pr message: send from A to B, send from B to C\\
+				A then must remain silengt while B is transmitting.
+			\subsubsection{Suppose now that A sends messages to B, and D sends messages to C. What is the combined maximum rate at which data messages can flow from A to B and from D to C?}
+				Since there is no overlap in the transmission from A to B and D to C both will be able to send a frame in every time slot.
+			\subsubsection{Suppose now that A sends messages to B, and C sends messages to D.What is the combined maximum rate at which data messages can flowfrom A to B and from C to D?}
+				Since C and B is both in the same transission range a message can only be sent at once in the scenario making it possible to send a message from A and C every other time slot of each other.
+			\subsubsection{Suppose now that the wireless links are replaced by wired links. Repeat questions (a) through (c) again in this wired scenario}
+				For scenario A it will be able to transmit directly to C making it possible to send in 1 time slot.\\
+				In scenario C it will not change anything, since it is being sent directly and a collision would still occour in case all sending at the same time.
+			\subsubsection{Now suppose we are again in the wireless scenario, and that for everydata message sent from source to destination, the destination will send an ACK message back to the source (e.g., as in TCP). Also suppose that each ACK message takes up one slot. Repeat questions (a)–(c) above forthis scenario.}
+				This will half the througput for every scenario.
+	\section{Lecture 13}
+		\subsection{Parrallel conenction gain}
+			Consider a short, 10-meter link, over which a sender can transmit at a rate of 150 bits/sec in both directions. Suppose that packets containing data are 100,000 bits long, and packets containing only control (e.g., ACK or handshaking) are 200 bits long. Assume that N parallel connections each get 1/N of the link bandwidth. Now consider the HTTP protocol, and supposethat each downloaded object is 100 Kbits long, and that the initial downloaded object contains 10 referenced objects from the same sender. Would parallel downloads via parallel instances of non-persistent HTTP make sense in this case? Now consider persistent HTTP. Do you expect significant gains over the non-persistent case? Justify and explain your answer.\\
+			Since the bandwidth is the limiting factor increasing the number of connection would not increase the amount of sent data.\\
+			Multiple connection would at most optimize the setup of the TCP connection to be done in parralel but since the short link it can to some extend be expected to be deminished by overhead of handling multiple connections.
+		\subsection{TCP}
+			Consider a TCP connection between Host A and Host B. Suppose that the TCP segments traveling from Host A to Host B have source port number x and destination port number y. What are the source and destination port numbers for the segments traveling from Host B to Host A?\\
+			It will be the same but flipped.
+		\subsection{Checksum}
+			\subsubsection{ Suppose you have the following 2 bytes: 01011100 and 01100101. What is the 1s complement of the sum of these 2 bytes}
+				1s complement will be the inverted bytes so: 01011100 + 01100101 = 11000001 wil lbe 00111110
+			\subsubsection{For the bytes in part (a), give an example where one bit is flipped in each of the 2 bytes and yet the 1s complement doesn’t change}
+				If any of the non equal bit is swapped so an example is 01011101 and 01100100
+		\subsection{GBN}
+			Consider the GBN protocol with a sender window size of 4 and a sequence number range of 1,024. Suppose that at time t, the next in-order packet that the receiver is expecting has a sequence number of k. Assume that the medium does not reorder messages. Answer the following questions:
+				\subsubsection{ What are the possible sets of sequence numbers inside the sender’s window at time t? Justify your answer}
+					Since the window size is 4 the possible sequence numbers is 0,1,2,3
+				\subsubsection{What are all possible values of the ACK field in all possible messages currently propagating back to the sender at time t? Justify your answer}
+					The possible ack values will match the sending window of 0,1,2,3
+		\subsection{Routers}
+			Suppose two packets arrive to two different input ports of a router at exactly the same time. Also suppose there are no other packets anywhere in the router.
+			\subsubsection{Suppose the two packets are to be forwarded to two different output ports. Is it possible to forward the two packets through the switch fabric at the same time when the fabric uses a shared bus?}
+				No the shared bus only can handle one package at a time, so one package must be buffered while the other uses the shared bus
+			\subsubsection{Suppose the two packets are to be forwarded to two different output ports. Is it possible to forward the two packets through the switch fabric at the same time when the fabric uses switching via memory?}
+				Depends on the implementation of the processor, in case of a processor which can handle multiple package at the same time using multiple cores then yes, they could both be forwarded.
+			\subsubsection{ Suppose the two packets are to be forwarded to the same output port. Is it possible to forward the two packets through the switch fabric at the same time when the fabric uses a crossbar?}
+				Since it is not the same output port then both packages can be forwarded at the same time.
+		\subsection{OSPF}
+			The OSPF routing protocol uses a MAC rather than digital signatures to provide message integrity. Why do you think a MAC was chosen over digital signatures?\\
+			Since MAC addresses is registered and given out, certified router makers MAC is already known, therefore making integregrity simple.
 \end{document}

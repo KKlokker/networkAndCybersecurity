@@ -1050,5 +1050,354 @@
 					\item Port-status - Change in ports
 					\item Packet-in - Packets wich does not match table or should be sent to controller
 				\end{itemize}
-				
+	\section{IPsec and VPN}
+		IP security protocol (IPsec) is a security protocol applied in network layer on the IP datagrams.\\
+		This is what enables virutal private networks (VPNs)\\
+		IPsec puts a security layer on top of the payload such as TCP, UDp pr ICMP.\\
+		The IPSec can provide, source authentication, data integrity, and replay-attack prevention.\\
+		A VPN can be desired in a institution placed in multiple geographical locations.\\
+		This will then make is possible to create a secure network conenction between locations over the public network.\\
+		IPsec can use two protocols: Authentication Header (AH) and Encapsulation Security Payload (ESP)\\
+		They both provide source authentication and data entregrity but ESP provide confiendtialy and therefore is used more.\\
+		Security Associations (SA) is a network layer logic connection which is undirectional.\\
+		If both entities want to send secure datagrams both has to setup a SA connection.\\
+		The SA has attributes which both sender and receiver keep track of
+		\begin{itemize}
+			\item 32 bit identificer for the SA called security paramete indes (SPI)
+			\item Origin interfance and destionation interface (IP addresses)
+			\item Type of encryption
+			\item Encryption key
+			\item Type of integrity
+			\item Authentication key
+		\end{itemize}
+		This information is stored in a Security Association Database (SAD) for each of the systems SAs\\
+		The IPsec packet comes in two froms tunnel mode and transport mode, from which the tunnel mode is most used.\\
+		The main difference is in tunnel mode the whole ip packet is used as payload whereas transport retains the original IP header.\\
+		To create a ipsec datagram in tunnel mode from a ipv4 datagram the following is done
+		\begin{enumerate}
+			\item Appends ipv4 header in the back in an ESP trailer field
+			\item Encrypt the result as dictated by SA
+			\item Adds ESP header information in front of encrypted ipv4 datagram which together is knwon as enchilada
+			\item Create an atuehntciation MAC over enchilada as dictated by SA
+			\item Add Mac in the back of enchilada
+			\item Create new IP header as a normal ipv4 header in front of the whole package
+		\end{enumerate}
+		The ESP header contains an SPI and sequence number.\\
+		The ESP trailer contains padding, padding length and NEXT header which identifices the paylaod type ushc as UDP.\\
+		The padding is used to make the message an integer number of blocks.\\
+		To create a connection the Internet Key Exhange (IKE) protocol is used.\\
+		It consist of two phases\\
+		Phase 1 use DIffie Hellman to create a bi directional IKE SA.\\
+		The IKE SA differ from IPsec SA and provides authentication and encryption.\\
+		The exhange keys for encryption, athentication and a master secret to computer IPSec SA is exchanged.\\
+		Phase 2 consist of revealing eachothers identity by signing their messages, in an encrypted connection created in phase 1.\\
+		The IPsec encryption and authentication algorithms is negotiated.
+	\section{Firewall}
+		A firewall is a unit of hardware and software which isolates an internal network from the internet.\\
+		It does this in three goals
+		\begin{itemize}
+			\item All traffix from outside to inside and vice versa pases through the firewall
+			\item Only authorized traffic as defined by the local security policy will be allowed to pass
+			\item The firewall itself is immune to penetration
+		\end{itemize}
+		A firewall is split up in three categories
+		\begin{itemize}
+			\item Packet filtering which filter packets determined on factors such as following which allows for ex. port 80 only be outgoing but not ingoing
+			\begin{itemize}
+				\item IP source or destination address
+				\item Protocol type in IP datagram field: TCP UDP OSPF and so on
+				\item TCP or UDP source and destion port
+				\item TCP flag bits: SYN, ACK...
+				\item ICMP message type
+				\item Different rules for datagrams leaving and entering the network
+				\item Different rule for router interfaces
+			\end{itemize}
+			\item Stateful packet filter which tracks TCP connections and use that knowledge for filtering
+			\item Application gateway which is used per application with a set of rules, which uses the data sent to the application for filtering ex. mail server
+		\end{itemize}
+		\subsection{Intrusion detection system}
+			Uses deep packet inspection to find potential harmfull packets.\\
+			There is two types Intrusion detection system (IDS) which alerts malicious traffic and Intrusion prevent system (IPS) which filter traffic\\
+			A system may split traffix in between multiple IDS in case of a lot of traffic, which sends suspicious traffic further to a processing unit.\\
+			IDS are most often places as close to the vulnrable points to filter as much traffic before.\\
+			IDS use a signature-based system or anomaly based system which have a database of known attacks types which it compares packets with.\\
+			Another style is where the IDS learns usual traffic and traffic which stands out is deemed suspicious. By this new attacks can be prevented but it is hard to determine what is usal traffic.\\
+			Snort is a public domain open source IDS with a large community based database.
+	\section{Link-layer}
+		A device running a link-layer protocol is knows as a node.\\
+		Nodes a connected throug links.\\
+		The purpose is to move a datagram to an adjacent node.\\
+		This is done by framing the datagram with a new datagram with new headers.\\
+		This is then send using link access wich includes medium access control (MAC) which specifes rules for sending from a sender to receiver(s).\\
+		A reliable delivery can be part of it with error detection, in case of unreliable link like wifi.\\
+		The error detection is also implemented using hardware.\\
+		The link layer have it own hardware like an ehernet chip or in general network interface controller (NIC)\\
+		The hardware can also interrupt the CPU and use software.\\
+		\subsection{Error detection}
+			The biggest goal of error detection is detect an error and be able to correct it and is known as forawrd error correction (FEC).\\
+			This is a big goal for reducing sending time and number of retransmissions.\\[4mm]
+			The most simple error detection is parity bit.\\
+			Parity bit works by a single bit representing if the amount of 1 is even or odd.\\
+			Problem is errors comes in burst so multiple erros fails the system.\\
+			Can also be implemented such the send data is grouped in rows from which the columns also have a parity bit.\\
+			By using this the error an be found, and corrected.\\
+			\subsubsection{Checksum}
+				For d bits of data, and the checksum k it can be done in multiple ways.\\
+				The most simple is the sum of the d bits.\\
+				The internet checksum uses this method where bytes of data is treated as 16 bit and the checksum is in the form of 1s compliment.\\
+				Cyclic redundancy check (CRS) is a more reliable and is used since in hardware it can be done fast.\\
+				It is also known as polyniomal codes.\\
+				The data d bits is send along r bits. The sender and receiver agree on a g value which the sum of d and r will be dividable by g.\\
+				g's most significant bit (leftmost) must be 1.\\
+				This means\\
+				$$d\cdot 2^r\text{XOR}r=n\cdot g$$
+				By XOR R on both sides
+				$$D\cdot 2^r=n\cdot g\text{XOR} r$$
+				Thus it can be simplified by
+				$$R=\text{remainder}\frac{d\cdot 2^r}{g}$$
+		\subsection{Link-layer switches}
+			Switches has the ability to look transparent to hosts and routers.\\
+			It serves two purposes filter and forward\\
+			Forwarding can be done by IP but the msot common is using MAC addresses.\\
+			The switches forwards using tables which consist of: MAC address, interface whihc leads to MAC address and time of entry\\
+			There are three cases of forwarding:
+			\begin{itemize}
+				\item No entry for destination MAC address and it is forwarded to all interfaces
+				\item There is an entry but the so source is the same as entry so frame is discarded
+				\item There is an entry and it not from the same source, the frame is forwarded to interface
+			\end{itemize}
+			The table is generated from incoming packages where it saves the interface and the source of frame\\
+			This makes the switch plug and play\\
+			The switch has advantages over a hub based star topologies 
+			\begin{itemize}
+				\item Elimination of collisions - by using buffers frames are forwarded one at a time
+				\item Heterogeneous links - interfaces can have different speeds and therefore making it possible to mix equipment
+				\item Management - the switch can detect problems and disconnect malfunctioning devices and gather statistic for debugging
+				\item Security - since frames are forwarded to interfaces package sniffing is more difficult but switch posining where the table is floded with false frames to deny or redirect frames
+			\end{itemize}
+			This is also done fast compared to a router, but require more ARP traffic\\
+			The router is also able to have a firewall and therefore is better for large networks since it also can have optimal routing where switches has a three structure.\\
+		\subsection{Virtual Local Area Netowrks (VLANs)}
+			The main idea of VLANs is dividing up a switch into virutal lans to divide and isolate traffic.\\
+			This is also to combat having large switches to small groups.\\
+			By this frames is only delivered into ither devices in the VLAN group.\\
+			The switch then contain a router which can route between VLANs\\
+			Some switches alsi include VLAN trunking for linking switches with a single cable.\\
+			The ethernet frame then have a four byte VLAN tag which identify which VLAN it comes from, in detail it is 2 byte TAG protcol identificer (TPID), 2 byte tag control infromation field that contains 12 bit VLAn identifier field and 3 bit priority field.\\
+		\subsection{Multiprotocol Label Swithing (MPLS)}
+			MPLS is used for increasing IP routers by using a fixed length label.\\
+			This is not replace IP but to work beside in compatible routers call label-switched router.\\
+			Here a MPLS header is added between layer-2 (ethernet) and layer-3 (IP).\\
+			The header consist of: label, 3 bit for experimental, 1 S bit, and a time-to-live field.\\
+			The label can then be used for forwarding without unpacking the IP datagram.\\
+			Compatible routers is identified in advertising routes from routers.\\
+			The main advantage is unlike IP a single route is not selected rather all routes are considered and rerouting is possible.\\
+			This is also smart for VPN since the ip is not considered but rather just a label.
+		\subsection{Data center networking}
+			Data centers have three purposes: provide content, server massively parallel computing infrastructure and cloud computing.\\
+			A data center cosist of host called blades which consist of CPI, memory and dist sotrage.\\
+			These are stacked in a rack with a top of rack switch (TOR). \\
+			TORs are then interconnected to toier 2 switches, connected to tier 1 switches, which is connected to border router.\\
+			To the tier 1 switches are load balancers which distributes traffic to the blades such the actual hsot ip is not needed either.
+	\section{Wireless networks}
+		Wireless hosts are end system devices.\\
+		Wireles links connect hosts thorugh a wireless communication link.\\
+		Base station is responsible for sending and recieving data.\\
+		Hosts to a base station is referred to as operating in infrastructure mode.\\
+		Ad hoc networks have no base station and hosts must themselves do routing, address assignmen, dns-like name transtation and more.\\
+		Movement from station to station is known as handoff or handover.\\
+		Wireless networks is classified by: whether a packet crosses hops and if a base station is present in the network.\\
+		The creates the four possibilties:
+		\begin{itemize}
+			\item Single-hop infrastructure based - Base station connected to larger wired network, all communication is single hop to base station
+			\item Single-hop, infrastructure less - no basestation but a single node coordinate transmission of other nodes (bluetooth)
+			\item Multi-hop infrastructure based - Base station wired to larger network, may have multiple hops through nodes wich relay communication (wireless mesh networks)
+			\item Multi-hop infrastructure less - no base station and communication is between multiple nodes known as mobile ad hoc networks (MANETs)
+		\end{itemize}
+		\subsection{Wireless Links and Network characteristics}
+			Wireless network differ from wired networks by
+			\begin{itemize}
+				\item Decreasing singal strengt
+				\item Interference from other sources
+				\item Multipath propagation - occours when portions of the electromagnetic wave reflect off objects and the ground taking paths of different length etween a sender and receiver
+			\end{itemize}
+			Bit erros are more common.\\
+			Signal to nouse ratio (SNR) is a measurement of the relative streng of the signal to noise, measured in decibel.\\
+			Bit error rate (BER) the probabillity of an error occoring.\\
+			Increase the SNR by increasing its transmission power will decrease the probabillity of BER, but requires more energy and is more likely to interfere\\
+			Therefore a wireless network can select the modulation technique the adapt channel conditions.\\
+			\subsubsection{CDMA}
+				Code division multiple access (CDMA) is method for working with the shared medium.\\
+				When a bit is sent it is multipled with a code, where 0 is represented as -1.\\
+				\includegraphics[width=300px]{assets/CDMA.png}\\
+				To get the value again it is done by $d_i=\frac{1}{M}\sum\limits_{m=1}^MZ_{i,m}\cdot c_m$\\
+				By this the average can be taking and therefore the longer code decrease the chance of a bit error.\\
+				Therefore even in case of two signal and the signal is additive, then each receiver will still get the correct value by using the correct code.\\
+				\includegraphics[width=300px]{assets/CDMAInter.png}\\
+		\subsection{WiFi: 802.11 Wireless LANs}
+			Comes in different standard which changes the frame but is backwards compatible.\\
+			WiFi comes in two frequency ranges 2.4-2.485 GHz and 5.1-5.8 GHz, where 2.4 is unlincensed and therefore used more, and 5 GHz does not reach as far on the same power level and suffer more from multipath propagation.\\
+			Uses CSMA/CA protocol
+			\subsubsection{CSMA/CA protocol}
+				Carriere Sense multiple Access is a method for making hosts not transmit in the way of eachother.\\
+				Works by the rules: Listen before speaking and if someone else begins talking at the same time stop talking.\\
+				CSMA with collision detection (CSMA/CD) is an extenstion to the CSMA.\\
+				CSMA works by in case of a collision and a transmitter does not get its acknowledgment it will wait a random interval and then try to retransmit.\\
+				CSMA/CD expands upon this such if it reads a signal while transmitting it will stop the transmission and go to waiting, instead of still sending the whole package.\\
+				The time interval is choosen in a binary exponential backoff such it starts low and get exponentially larger for every collision.\\
+				The efficiency will then be equal $\frac{1}{1+5d_{prop}/d_{trans}}$
+		\subsubsection{WiFi wireless LAN Architecture}
+			Is a basic serve set (BSS) and contains a one or more wireless stations and central base station known as the access point (AP).\\
+			The typical network therefore have a router and AP most often integrated into one unit.\\
+			The wireless station has a 6 byte MAC address for connecting, likewise the AP.\\
+			Wireless statiosn needs to associate with an AP before it can send or receive network layer data.\\
+			An AP has an associated service set identifier (SSID) which identified the AP.\\
+			The frequency is the nsplit into smaller ranges for 2.4 GHz there is 11 partially overlapping channels, where channels seperated by four or more channels is non overlapping.\\
+			The find an AP a beacon frame is sent periodically, with the APs SSID and MAC address, and devices scans the 11 channels for beacon messages known as passive scanning.\\
+			For the device to choose the connected APs the host themselve implements an algorithm not specified.\\
+			Active scanning the device sends a broadcasting probe frame which is responded to by the AP.\\
+			When connected a DHCP discovery message is send into the subnet through the AP.\\
+			The AP can authenticate with different methods.\\
+			\begin{itemize}
+				\item Devices MAC address
+				\item Username and passwords
+			\end{itemize}
+			This can be handled by an authentication server 
+	\subsection{802.11 MAC Protocol}
+		There are three different classes of multiple access protocols
+		\begin{itemize}
+			\item Channel partioning including CDMA
+			\item Taking turns
+			\item Random access
+		\end{itemize}
+		\subsubsection{Taking turns}
+			Taking turns work by a polling master is choosen, the master make sure that in turn every node is in turn given access to the medium.\\
+			This has drawbacks in case of the master occour some error it will stop the whole protocol until a recover is done.\\
+			A decentratilized alternative is the token passing protocol, where a fixed order is choosen and once a token is given the host can use the medium and pass on the token after use.\\
+			The problem is in case of a host occour an error and does not forward the token it stops the protocol
+		\subsubsection{Random access}
+			Tries to transmit frames in case of collision wait a random amount of time.\\
+			Example is Slotted ALOHA wich retransmit using a probability\\
+			The most optimal probabillity is 37\% making 26\% chance of collision\\
+			The MAC uses this form of protocol known as CSMA without collision avoidance.\\
+			This is due to to host may not detect other networks transmission because they are opposite of the router and therefore the router receive the transmission before the other host known as hidden terminals.\\
+			Therefore the WiFI uses a link-layer acknowledgment/retranmisssion (ARQ) scheme.\\
+			When the destionation receive a frame that passes the CRC waits a short inter-frame spacing (SIFS) and sends an acknowledment frame.\\
+			In case of no ack the host will retransmit.\\
+		\subsubsection{Hidden terminals}
+			To counteract the problem a reservation of the medium is given by the AP.\\
+			A host sends a short request to send (RTS) control frame, and if responded by the AP with a Clear to Send (CTS) frame allows the host to send data.\\
+			Collision will be a little problem due to the frames being short.\\
+		\subsubsection{Frame}
+			\includegraphics[width=300px]{assets/wifiFrame.png}\\
+			Payload up to 2312 bytes, but mostly fewer than 1500 bytes.\\
+			The frame has four address field
+			\begin{itemize}
+				\item Mac address of the wireless station that is to receive the frame
+				\item Mac address of the station that transmits the frame
+				\item Mac address of the router which connects the subnet to the router
+				\item Used for forward frames to each other in ad hoc mode
+			\end{itemize}
+			Duration used for reservation of the medium.\\
+			The type and subtype fields are used to distingiush the association RTS, CTS, ACK and data frames.\\
+			To and From field are used to defined meanings of the different address fields.\\
+			WEP indicated if encryptions is being used.
+		\subsubsection{Mobility in the same IP subnet}
+			Mobility between BSSs is straightforward if the BSSs is part of the subnet.
+			This can allow the host to keep the IP and all ongoing TCP connections.\\
+			Otherwise a new IP is needed through DHCP and will disrupt all TCP connections.\\
+		\subsubsection{Advanced features}
+			Rate adaption selects the modulation technique.\\
+			If an ode sends two frames in a row without receiving an acknowlegment the transmission rate falls back to the next lower rate.\\
+			If 10 frames succeedes the increases to a new higher rate.\\
+			Power management can be done by managing sleep and wake states.\\
+			A node will tell the AP when it goes to sleep by setting a power management bit in the header.\\
+			A time in the node is set to wakeup just before the AP beacon time.\\
+			The AP then buffers frames for the node, and in the beacon tells if nodes have any buffered frames.\\
+			If any then fulkly wakes up otherwise goes back to sleep.\\
+		\subsubsection{Personal Area networks: Bluetooth}
+			Uses time division multiplexing (TDM) which divides time into time frames and further divides each time frame into N time slots.\\
+			Each time slot is then assigned to a node. Time slots size is choosen based on transmission time of a single packet.\\
+			TDM eliminates collision and is fair but waste a lot of time in case of nodes not always having to transmit.\\
+			It also uses FDM which divides the medium range into channels which a node is assigned to but suffers the same problem as TDM.\\
+			Randomized backoff and polling, error detection and corecction and reliable data transfer via ACKS and NAKS.\\
+			Uses 2.4 GHz.\\
+			During a timeslot of the TDM one of 79 channels is used which is changed in a psudo random way known as frequency hopping spread spectrum (FHSS)\\
+	\section{Securing wireless Lans and 4g/5g}
+		The wireless nature makes it possible to sniff all packages.\\
+		802.11 shoudl handle
+		\begin{itemize}
+			\item Mutual authentication - verify the identity and access privileges, likewise the device authenticate the nework
+			\item Encryption - Using the symmetric key encryption is used in practive since encryption and decryotion must be performed at high speed.
+		\end{itemize}
+		To process the mutual authentication and encryption-key deriviation
+		\begin{enumerate}
+			\item Discovery - AP advertise its presence and the forms of authentication and encryotion, the deivce then request specific forms of quth and encryption
+			\item Mutual authentication and shared symmetric key derrication - Devices and AP share a common secret (eg password), using this an nonces and cryptographcis hashing
+			\item Shared symmetric session key distribution - A protocol will be needed for the authentication server to inform the PA of the shared symmetric symmetric session key
+			\item Enrypted communication between mobile device and a remote host via the AP - AES used
+		\end{enumerate}
+		\subsection{Mutual authentication and shared symmetric session key deriviation}
+			The first standard Wired equivalent privacy (WEP) contained security flwas.\\
+			WiFi procected access (WPA1) came with message integrit check, and avoided attacks which could infer encryption key after some observation\\
+			WPA2 mandated the use of AES symmetric key encryption.\\
+			WPA is a four-way handshake protocol that performs both mutual authentication and shared symmetric session-key deriviation.\\
+			The handshake goes as
+			\begin{enumerate}
+				\item Authentication server (AS) generate a nonce and sensd it to the mobile device
+				\item Mobile device M receive the nonce generated the symmetric shared session key using the AS nonce and its own nonce and the known secret and MAC address of M and AS, ands ends its own nonce and the AS nonce and secret key in HMAC signed package
+			\end{enumerate}
+			WPA3 updates attack on the four way handshae by using reused nonce and longer key length among other changes.\\
+		\subsection{Authentication and key agreement in 4g/5g}
+			The 4g authentication protocol AKA consis of 
+			\begin{enumerate}
+				\item Authentication request to HSS - device sends its internation mobile subscriber identity (IMSI) which is related to the Mobility Managemenet Entity (MME), MME then sends it to the Hoem subscriver service (HSS)
+				\item Authentication resposne from HSS - HSS uses shared secret key to create an authentication token
+				\item Authentication response from mobile device - uses the shared secret key to decode the authentication token and sends the answer to the HSS
+				\item Mobile device authentication - If a match is done HSS inform the base station and mobile device that it is authorized and sends the base station keys used in the authenticatio ntoken
+				\item Data plane and control plane key derrivation - Base and mobile device agree on encryption protocol using the auth key
+			\end{enumerate}
+			For 5g there were changes to
+			\begin{itemize}
+				\item Two new protocols for authentication and key agreement, menat for IoT environment and does not need shared secret key
+				\item Uses public key cryptography techniques to encrypt a devices permanent identity
+			\end{itemize}
+	\section{Anonymity and Privacy}
+		Anonymity can only somewhat be reached using the protocol looked at so far.\\
+		Using IPsec it is possible to anonymice the sender but not the receiver.\\
+		It is possible to reach confidentiality with TLS and IPSec (confidentiality has some identificer to pin point the connection unlike anonymous which is simply a connection)\\
+		\subsection{Internet}
+			Unlike the open internet known as the NFS net, there exist different networks which is also connectable.\\
+			The deep web consist of non indexed sites, and therefore will not appear in search engines and the direct url have to be known to access.\\
+			The dark web uses different protocol with more encryption and uses multiple hops to get access to sites  not visible on the normal net anonymously.\\
+			TOR is a browser used for setting up an onion connection.\\
+			It is done by selecting 3 onion nodes, and generating shared key with each.\\
+			Then the message is encoded for each three nodes such the first node decodes the first layer and sends it further, until the last node decodes the actual message and sends it to the wanted web server.\\
+			The TOR browser defines
+			\begin{itemize}
+				\item Message length - to ensure that length could not be used to determine where in the chain the message is
+				\item Message structure
+				\item How to establish keys
+				\item How messages is sent
+				\item How nodes should decrypt adn forward messages
+			\end{itemize}
+			Due to the encreased hops and encryption the browser is substantiol slower.\\
+			The nodes use trusted guard/entry nodes such an entity can not get enough nodes to determine traffic
+		\subsection{Hidden services - Onion websites}
+			Onion websites exists on in the nodes, such it never leaves the TOR network.\\
+			This achives that either the client or server know eachother if no authentication.\\
+			The will ensure privacy in case of a sniffer at the input and output and a client can be correlated to ouput, therefore defeating anonymously.\\
+			A hidden service is setup by selecting three random nodes as entry nodes ie nodes which knows the address of the server.\\
+			The service is then added to the global hash table (known as DHT distributed on all nodes) as a descriptor with its onion address as key, and the value pair of ip for entry nodes and its public key for authentication.\\
+			When a connection is made after the wanted hops it connects to an entry point which essentially forwards, the service then goes to the last node known as the redezvous point (RP) of the chain before the entry point and sends the response through its own number of hops.\\
+			The onion address comes in different versions
+			\begin{itemize}
+				\item Version 1 - Generated from public key
+				\item Version 2 - First half of base32 encoded SHA-1 hash of public key from 1024 RSA 
+				\item Version 3 (standard) - Is now 56 characters long, uses SHA-3 instead and curve25519 instead of RSA, making it more private and robust
+			\end{itemize}
+			
+			
+			
+			
 \end{document}
